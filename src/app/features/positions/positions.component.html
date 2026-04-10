@@ -11,7 +11,7 @@
 
 <div class="table-container">
   <div class="table-toolbar">
-    <h2>Postes</h2>
+    <h2>Liste des postes ({{ filtered.length }})</h2>
     <div class="search-input">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       <input type="text" placeholder="Rechercher..." [(ngModel)]="search" (input)="onSearch()" />
@@ -24,15 +24,35 @@
     <table *ngIf="filtered.length > 0">
       <thead>
         <tr>
-          <th>Titre</th>
-          <th>ID Département</th>
+          <th>Nom</th>
+          <th>Code</th>
+          <th>Entreprise</th>
+          <th>Département</th>
+          <th>Description</th>
+          <th>Actif</th>
           <th>Actions</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let item of filtered">
-          <td>{{ item.title }}</td>
-          <td>{{ item.departmentId }}</td>
+          <td><strong>{{ item.name }}</strong></td>
+          <td>
+            <span class="badge badge-default" *ngIf="item.code">{{ item.code }}</span>
+            <span *ngIf="!item.code">—</span>
+          </td>
+          <td>
+            <span class="company-chip">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="12"><path d="M2 14V5.5l6-3.5 6 3.5V14"/><rect x="5" y="9" width="3" height="5" rx=".5"/></svg>
+              {{ companyName(item.companyId) }}
+            </span>
+          </td>
+          <td>{{ item.departmentId ? departmentName(item.departmentId) : '—' }}</td>
+          <td>{{ item.description || '—' }}</td>
+          <td>
+            <span class="badge" [class.badge-success]="item.isActive" [class.badge-danger]="!item.isActive">
+              {{ item.isActive ? 'Actif' : 'Inactif' }}
+            </span>
+          </td>
           <td>
             <div class="actions">
               <button class="btn btn-icon btn-secondary" (click)="openEdit(item)" title="Modifier">
@@ -49,37 +69,82 @@
 
     <div class="empty-state" *ngIf="filtered.length === 0">
       <div class="empty-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
       </div>
-      <h3>Aucun résultat</h3>
-      <p>Aucun élément trouvé. Commencez par en ajouter un.</p>
+      <h3>Aucun poste</h3>
+      <p>Commencez par en créer un.</p>
     </div>
   </div>
 </div>
 
-<!-- Modal -->
+<!-- ── Modal ─────────────────────────────────────────────────────────────── -->
 <div class="modal-overlay" *ngIf="showModal" (click)="close()">
   <div class="modal" (click)="$event.stopPropagation()">
+
     <div class="modal-header">
-      <h3>{{ editing ? 'Modifier' : 'Ajouter' }} – Postes</h3>
+      <h3>{{ editing ? 'Modifier' : 'Nouveau' }} poste</h3>
       <button class="btn btn-icon btn-secondary" (click)="close()">
         <svg viewBox="0 0 20 20" fill="currentColor" width="16"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
       </button>
     </div>
+
     <div class="modal-body">
-      <div class="error-msg" *ngIf="error">{{ error }}</div>
-    <div class="form-group">
-      <label>Titre</label>
-      <input type="text" [(ngModel)]="form.title" placeholder="Titre" />
+      <div class="api-error" *ngIf="errors['api']">{{ errors['api'] }}</div>
+
+      <!-- Entreprise -->
+      <div class="form-group" [class.has-error]="hasError('companyId')">
+        <label>Entreprise <span class="required">*</span></label>
+        <select [(ngModel)]="form.companyId" (ngModelChange)="onCompanyChange()">
+          <option value="">— Sélectionner une entreprise —</option>
+          <option *ngFor="let c of companies" [value]="c.id">{{ c.name }}</option>
+        </select>
+        <span class="field-error" *ngIf="hasError('companyId')">{{ errors['companyId'] }}</span>
+      </div>
+
+      <!-- Département (filtré par entreprise) -->
+      <div class="form-group">
+        <label>Département</label>
+        <select [(ngModel)]="form.departmentId" [disabled]="!form.companyId">
+          <option value="">— Aucun département —</option>
+          <option *ngFor="let d of filteredDepts" [value]="d.id">{{ d.name }}</option>
+        </select>
+        <span class="hint" *ngIf="!form.companyId">Sélectionnez d'abord une entreprise</span>
+      </div>
+
+      <!-- Nom + Code -->
+      <div class="form-row">
+        <div class="form-group" [class.has-error]="hasError('name')">
+          <label>Nom du poste <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="form.name" placeholder="Ex: Développeur Backend" />
+          <span class="field-error" *ngIf="hasError('name')">{{ errors['name'] }}</span>
+        </div>
+        <div class="form-group">
+          <label>Code</label>
+          <input type="text" [(ngModel)]="form.code" placeholder="Ex: DEV-BACK" />
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="form-group">
+        <label>Description</label>
+        <textarea [(ngModel)]="form.description" placeholder="Description du poste..."></textarea>
+      </div>
+
+      <!-- Statut -->
+      <div class="form-group">
+        <label>Statut</label>
+        <select [(ngModel)]="form.isActive">
+          <option [ngValue]="true">Actif</option>
+          <option [ngValue]="false">Inactif</option>
+        </select>
+      </div>
+
     </div>
-    <div class="form-group">
-      <label>ID Département</label>
-      <input type="text" [(ngModel)]="form.departmentId" placeholder="ID Département" />
-    </div>
-    </div>
+
     <div class="modal-footer">
       <button class="btn btn-secondary" (click)="close()">Annuler</button>
       <button class="btn btn-primary" (click)="save()">{{ editing ? 'Enregistrer' : 'Créer' }}</button>
     </div>
+
   </div>
 </div>

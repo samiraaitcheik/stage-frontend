@@ -1,0 +1,9 @@
+.company-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+
+  svg { color: var(--text-faint); flex-shrink: 0; }
+}

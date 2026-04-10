@@ -1,8 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DepartmentService } from '../../core/services/domain.services';
-import { Department, CreateDepartmentPayload, UpdateDepartmentPayload, FormErrors, validateRequired } from '../../core/models';
+import { forkJoin } from 'rxjs';
+import { DepartmentService, CompanyService } from '../../core/services/domain.services';
+import {
+  Department, Company,
+  CreateDepartmentPayload, UpdateDepartmentPayload,
+  FormErrors, validateRequired
+} from '../../core/models';
 
 @Component({
   selector: 'app-departments',
@@ -12,32 +17,43 @@ import { Department, CreateDepartmentPayload, UpdateDepartmentPayload, FormError
   styleUrls: ['./departments.component.scss']
 })
 export class DepartmentsComponent implements OnInit {
-  items: Department[] = [];
+  items: Department[]    = [];
   filtered: Department[] = [];
-  loading = true;
+  companies: Company[]   = [];
+  loading   = true;
   showModal = false;
-  editing = false;
+  editing   = false;
   editingId = '';
-  search = '';
+  search    = '';
   errors: FormErrors = {};
 
   form: CreateDepartmentPayload = {
-    companyId: '',
-    name: '',
-    code: '',
-    description: '',
-    isActive: true,
+    companyId: '', name: '', code: '', description: '', isActive: true,
   };
 
-  constructor(private service: DepartmentService) {}
+  constructor(
+    private service: DepartmentService,
+    private companyService: CompanyService,
+  ) {}
 
-  ngOnInit() { this.load(); }
+  ngOnInit() {
+    forkJoin({
+      departments: this.service.getAll(),
+      companies:   this.companyService.getAll(),
+    }).subscribe({
+      next: (d) => {
+        this.items     = d.departments;
+        this.filtered  = d.departments;
+        this.companies = d.companies;
+        this.loading   = false;
+      },
+      error: () => { this.loading = false; }
+    });
+  }
 
   load() {
-    this.loading = true;
     this.service.getAll().subscribe({
-      next: (data) => { this.items = data; this.filtered = data; this.loading = false; },
-      error: () => { this.loading = false; }
+      next: (data) => { this.items = data; this.filtered = data; },
     });
   }
 
@@ -56,11 +72,11 @@ export class DepartmentsComponent implements OnInit {
 
   openEdit(item: Department) {
     this.form = {
-      companyId: item.companyId,
-      name: item.name,
-      code: item.code ?? '',
+      companyId:   item.companyId,
+      name:        item.name,
+      code:        item.code        ?? '',
       description: item.description ?? '',
-      isActive: item.isActive,
+      isActive:    item.isActive,
     };
     this.editing = true; this.editingId = item.id; this.errors = {};
     this.showModal = true;
@@ -85,6 +101,10 @@ export class DepartmentsComponent implements OnInit {
     this.service.delete(id).subscribe(() => this.load());
   }
 
-  close() { this.showModal = false; }
-  hasError(field: string) { return !!this.errors[field]; }
+  companyName(id: string): string {
+    return this.companies.find(c => c.id === id)?.name ?? id;
+  }
+
+  close()             { this.showModal = false; }
+  hasError(f: string) { return !!this.errors[f]; }
 }

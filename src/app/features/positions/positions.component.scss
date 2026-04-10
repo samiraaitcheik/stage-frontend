@@ -1,0 +1,21 @@
+.company-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  svg { color: var(--text-faint); flex-shrink: 0; }
+}
+
+.hint {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-faint);
+  margin-top: 4px;
+  font-style: italic;
+}
+
+select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

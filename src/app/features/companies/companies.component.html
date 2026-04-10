@@ -11,7 +11,7 @@
 
 <div class="table-container">
   <div class="table-toolbar">
-    <h2>Entreprises</h2>
+    <h2>Liste des entreprises ({{ filtered.length }})</h2>
     <div class="search-input">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       <input type="text" placeholder="Rechercher..." [(ngModel)]="search" (input)="onSearch()" />
@@ -25,18 +25,31 @@
       <thead>
         <tr>
           <th>Nom</th>
-          <th>Adresse</th>
+          <th>Raison sociale</th>
+          <th>Ville</th>
           <th>Téléphone</th>
           <th>Email</th>
+          <th>Devise</th>
+          <th>Statut</th>
           <th>Actions</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let item of filtered">
-          <td>{{ item.name }}</td>
-          <td>{{ item.address }}</td>
-          <td>{{ item.phone }}</td>
-          <td>{{ item.email }}</td>
+          <td><strong>{{ item.name }}</strong></td>
+          <td>{{ item.legalName || '—' }}</td>
+          <td>{{ item.city || '—' }}</td>
+          <td>{{ item.phone || '—' }}</td>
+          <td>{{ item.email || '—' }}</td>
+          <td><span class="badge badge-default">{{ item.currency || 'MAD' }}</span></td>
+          <td>
+            <span class="badge"
+              [class.badge-success]="item.status === 'ACTIVE'"
+              [class.badge-warning]="item.status === 'INACTIVE'"
+              [class.badge-danger]="item.status === 'SUSPENDED'">
+              {{ item.status }}
+            </span>
+          </td>
           <td>
             <div class="actions">
               <button class="btn btn-icon btn-secondary" (click)="openEdit(item)" title="Modifier">
@@ -53,45 +66,131 @@
 
     <div class="empty-state" *ngIf="filtered.length === 0">
       <div class="empty-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 21h18M5 21V7l7-4 7 4v14"/></svg>
       </div>
-      <h3>Aucun résultat</h3>
-      <p>Aucun élément trouvé. Commencez par en ajouter un.</p>
+      <h3>Aucune entreprise</h3>
+      <p>Commencez par en ajouter une.</p>
     </div>
   </div>
 </div>
 
-<!-- Modal -->
+<!-- ── Modal ─────────────────────────────────────────────────────────────── -->
 <div class="modal-overlay" *ngIf="showModal" (click)="close()">
-  <div class="modal" (click)="$event.stopPropagation()">
+  <div class="modal modal-lg" (click)="$event.stopPropagation()">
+
     <div class="modal-header">
-      <h3>{{ editing ? 'Modifier' : 'Ajouter' }} – Entreprises</h3>
+      <h3>{{ editing ? 'Modifier' : 'Nouvelle' }} entreprise</h3>
       <button class="btn btn-icon btn-secondary" (click)="close()">
         <svg viewBox="0 0 20 20" fill="currentColor" width="16"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
       </button>
     </div>
+
     <div class="modal-body">
-      <div class="error-msg" *ngIf="error">{{ error }}</div>
-    <div class="form-group">
-      <label>Nom</label>
-      <input type="text" [(ngModel)]="form.name" placeholder="Nom" />
+
+      <div class="api-error" *ngIf="errors['api']">{{ errors['api'] }}</div>
+
+      <!-- ── Identification ── -->
+      <div class="form-section-title">Identification</div>
+
+      <div class="form-row">
+        <div class="form-group" [class.has-error]="hasError('name')">
+          <label>Nom commercial <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="form.name" placeholder="Ex: HRMatrix SARL" />
+          <span class="field-error" *ngIf="hasError('name')">{{ errors['name'] }}</span>
+        </div>
+        <div class="form-group">
+          <label>Raison sociale</label>
+          <input type="text" [(ngModel)]="form.legalName" placeholder="Ex: HRMatrix Société à Responsabilité Limitée" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Identifiant fiscal (IF)</label>
+          <input type="text" [(ngModel)]="form.taxIdentifier" placeholder="Ex: 12345678" />
+        </div>
+        <div class="form-group">
+          <label>Numéro RC</label>
+          <input type="text" [(ngModel)]="form.rcNumber" placeholder="Ex: 123456" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Numéro ICE</label>
+          <input type="text" [(ngModel)]="form.iceNumber" placeholder="Ex: 001234567000012" />
+        </div>
+        <div class="form-group">
+          <label>Numéro CNSS</label>
+          <input type="text" [(ngModel)]="form.cnssNumber" placeholder="Ex: 1234567" />
+        </div>
+      </div>
+
+      <!-- ── Contact ── -->
+      <div class="form-section-title">Contact</div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" [(ngModel)]="form.email" placeholder="contact@entreprise.ma" />
+        </div>
+        <div class="form-group">
+          <label>Téléphone</label>
+          <input type="tel" [(ngModel)]="form.phone" placeholder="+212 5XX XXX XXX" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Adresse</label>
+        <input type="text" [(ngModel)]="form.address" placeholder="N° rue, quartier..." />
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Ville</label>
+          <input type="text" [(ngModel)]="form.city" placeholder="Ex: Casablanca" />
+        </div>
+        <div class="form-group">
+          <label>Pays</label>
+          <input type="text" [(ngModel)]="form.country" placeholder="Maroc" />
+        </div>
+      </div>
+
+      <!-- ── Paramètres ── -->
+      <div class="form-section-title">Paramètres</div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Devise</label>
+          <select [(ngModel)]="form.currency">
+            <option value="MAD">MAD — Dirham marocain</option>
+            <option value="EUR">EUR — Euro</option>
+            <option value="USD">USD — Dollar américain</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Fuseau horaire</label>
+          <select [(ngModel)]="form.timezone">
+            <option value="Africa/Casablanca">Africa/Casablanca</option>
+            <option value="Europe/Paris">Europe/Paris</option>
+            <option value="UTC">UTC</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Statut</label>
+        <select [(ngModel)]="form.status">
+          <option *ngFor="let s of statusOptions" [value]="s">{{ s }}</option>
+        </select>
+      </div>
+
     </div>
-    <div class="form-group">
-      <label>Adresse</label>
-      <input type="text" [(ngModel)]="form.address" placeholder="Adresse" />
-    </div>
-    <div class="form-group">
-      <label>Téléphone</label>
-      <input type="text" [(ngModel)]="form.phone" placeholder="Téléphone" />
-    </div>
-    <div class="form-group">
-      <label>Email</label>
-      <input type="text" [(ngModel)]="form.email" placeholder="Email" />
-    </div>
-    </div>
+
     <div class="modal-footer">
       <button class="btn btn-secondary" (click)="close()">Annuler</button>
       <button class="btn btn-primary" (click)="save()">{{ editing ? 'Enregistrer' : 'Créer' }}</button>
     </div>
+
   </div>
 </div>

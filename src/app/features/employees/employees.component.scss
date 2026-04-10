@@ -1,0 +1,59 @@
+.badge-status-active     { background: #d1e7dd; color: #0a3622; padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; }
+.badge-status-inactive   { background: #e2e3e5; color: #41464b; padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; }
+.badge-status-suspended  { background: #fff3cd; color: #856404; padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; }
+.badge-status-left       { background: #f8d7da; color: #58151c; padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; }
+
+.modal-lg {
+  max-width: 780px;
+  width: 95vw;
+}
+
+.form-section-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin: 20px 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 6px;
+
+  &:first-of-type { margin-top: 0; }
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 2px;
+}
+
+.api-error {
+  background: var(--danger-light);
+  color: var(--danger);
+  border: 1px solid var(--danger);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.field-error {
+  font-size: 0.75rem;
+  color: var(--danger);
+  margin-top: 4px;
+  display: block;
+}
+
+.has-error input,
+.has-error select {
+  border-color: var(--danger) !important;
+}
+
+.required { color: var(--danger); }

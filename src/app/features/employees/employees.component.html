@@ -1,67 +1,249 @@
 <div class="page-header">
-  <div><h1>Employés</h1><p class="page-subtitle">Gestion des employés</p></div>
-  <button class="btn btn-primary" (click)="openCreate()">+ Ajouter</button>
-</div>
-<div class="table-container">
-  <div class="table-toolbar"><h2>Employés</h2>
-    <div class="search-input"><input type="text" placeholder="Rechercher..." [(ngModel)]="search" (input)="onSearch()" /></div>
+  <div>
+    <h1>Employés</h1>
+    <p class="page-subtitle">Gestion des employés</p>
   </div>
+  <button class="btn btn-primary" (click)="openCreate()">
+    <i class="bi bi-person-plus-fill"></i> Ajouter
+  </button>
+</div>
+
+<div class="table-container">
+  <div class="table-toolbar">
+    <h2>Employés</h2>
+    <div class="search-input">
+      <i class="bi bi-search"></i>
+      <input type="text" placeholder="Rechercher..." [(ngModel)]="search" (input)="onSearch()" />
+    </div>
+  </div>
+
   <div *ngIf="loading" class="loading-spinner"></div>
+
   <div class="table-scroll" *ngIf="!loading">
     <table *ngIf="filtered.length > 0">
-      <thead><tr><th>Code</th><th>Prénom</th><th>Nom</th><th>CIN</th><th>Email</th><th>Téléphone</th><th>Date embauche</th><th>Salaire base</th><th>Statut</th><th>Actions</th></tr></thead>
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Nom complet</th>
+          <th>CIN</th>
+          <th>Email</th>
+          <th>Téléphone</th>
+          <th>Entreprise</th>
+          <th>Département</th>
+          <th>Poste</th>
+          <th>Date embauche</th>
+          <th>Salaire base</th>
+          <th>Statut</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
       <tbody>
         <tr *ngFor="let item of filtered">
-          <td>{{ item.employeeCode }}</td><td>{{ item.firstName }}</td><td>{{ item.lastName }}</td>
-          <td>{{ item.cin }}</td><td>{{ item.email }}</td><td>{{ item.phone }}</td>
-          <td>{{ item.hireDate | date:'dd/MM/yyyy' }}</td><td>{{ item.baseSalary }}</td><td>{{ item.status }}</td>
-          <td><div class="actions">
-            <button class="btn btn-icon btn-secondary" (click)="openEdit(item)" title="Modifier">✏️</button>
-            <button class="btn btn-icon btn-danger" (click)="delete(item.id)" title="Supprimer">🗑️</button>
-          </div></td>
+          <td>{{ item.employeeCode ?? '—' }}</td>
+          <td><strong>{{ item.firstName }} {{ item.lastName }}</strong></td>
+          <td>{{ item.cin ?? '—' }}</td>
+          <td>{{ item.email ?? '—' }}</td>
+          <td>{{ item.phone ?? '—' }}</td>
+          <td>{{ companyName(item.companyId) }}</td>
+          <td>{{ departmentName(item.departmentId) }}</td>
+          <td>{{ positionName(item.positionId) }}</td>
+          <td>{{ item.hireDate | date:'dd/MM/yyyy' }}</td>
+          <td>{{ item.baseSalary ?? '—' }}</td>
+          <td><span class="badge badge-status-{{item.status.toLowerCase()}}">{{ item.status }}</span></td>
+          <td>
+            <div class="actions">
+              <button class="btn btn-icon btn-secondary" (click)="openEdit(item)" title="Modifier">
+                <i class="bi bi-pencil"></i>
+              </button>
+              <button class="btn btn-icon btn-danger" (click)="delete(item.id)" title="Supprimer">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </td>
         </tr>
       </tbody>
     </table>
-    <div class="empty-state" *ngIf="filtered.length === 0"><h3>Aucun résultat</h3></div>
+
+    <div class="empty-state" *ngIf="filtered.length === 0">
+      <div class="empty-icon"><i class="bi bi-people" style="font-size:2.5rem;color:var(--text-muted)"></i></div>
+      <h3>Aucun employé trouvé</h3>
+      <p>Commencez par en ajouter un.</p>
+    </div>
   </div>
 </div>
+
+<!-- Modal -->
 <div class="modal-overlay" *ngIf="showModal" (click)="close()">
-  <div class="modal" (click)="$event.stopPropagation()">
-    <div class="modal-header"><h3>{{ editing ? 'Modifier' : 'Ajouter' }} – Employé</h3><button class="btn btn-icon btn-secondary" (click)="close()">✕</button></div>
+  <div class="modal modal-lg" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>
+        <i class="bi bi-person-badge"></i>
+        {{ editing ? 'Modifier' : 'Ajouter' }} – Employé
+      </h3>
+      <button class="btn btn-icon btn-secondary" (click)="close()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
     <div class="modal-body">
-      <div class="error-msg" *ngIf="errors['api']">{{ errors["api"] }}</div>
-      <div class="form-group"><label>ID Entreprise *</label><input type="text" [(ngModel)]="form.companyId" /></div>
-      <div class="form-group"><label>Code employé</label><input type="text" [(ngModel)]="form.employeeCode" /></div>
-      <div class="form-group"><label>Prénom *</label><input type="text" [(ngModel)]="form.firstName" /></div>
-      <div class="form-group"><label>Nom *</label><input type="text" [(ngModel)]="form.lastName" /></div>
-      <div class="form-group"><label>CIN</label><input type="text" [(ngModel)]="form.cin" /></div>
-      <div class="form-group"><label>N° CNSS</label><input type="text" [(ngModel)]="form.cnssNumber" /></div>
-      <div class="form-group"><label>Matricule</label><input type="text" [(ngModel)]="form.matricule" /></div>
-      <div class="form-group"><label>Genre</label>
-        <select [(ngModel)]="form.gender"><option value="">--</option><option value="MALE">MALE</option><option value="FEMALE">FEMALE</option></select>
+      <div class="api-error" *ngIf="errors['api']">
+        <i class="bi bi-exclamation-triangle-fill"></i> {{ errors['api'] }}
       </div>
-      <div class="form-group"><label>Date naissance</label><input type="date" [(ngModel)]="form.birthDate" /></div>
-      <div class="form-group"><label>Téléphone</label><input type="text" [(ngModel)]="form.phone" /></div>
-      <div class="form-group"><label>Email</label><input type="email" [(ngModel)]="form.email" /></div>
-      <div class="form-group"><label>Adresse</label><input type="text" [(ngModel)]="form.address" /></div>
-      <div class="form-group"><label>Ville</label><input type="text" [(ngModel)]="form.city" /></div>
-      <div class="form-group"><label>Date embauche *</label><input type="date" [(ngModel)]="form.hireDate" /></div>
-      <div class="form-group"><label>Salaire de base</label><input type="number" [(ngModel)]="form.baseSalary" /></div>
-      <div class="form-group"><label>Mode paiement</label><input type="text" [(ngModel)]="form.paymentMode" /></div>
-      <div class="form-group"><label>Banque</label><input type="text" [(ngModel)]="form.bankName" /></div>
-      <div class="form-group"><label>N° Compte bancaire</label><input type="text" [(ngModel)]="form.bankAccountNumber" /></div>
-      <div class="form-group"><label>ID Département</label><input type="text" [(ngModel)]="form.departmentId" /></div>
-      <div class="form-group"><label>ID Poste</label><input type="text" [(ngModel)]="form.positionId" /></div>
-      <div class="form-group"><label>Statut</label>
+
+      <!-- Section: Identification -->
+      <div class="form-section-title"><i class="bi bi-building"></i> Entreprise & Organisation</div>
+      <div class="form-row">
+        <!-- ✅ Dropdown entreprise -->
+        <div class="form-group" [class.has-error]="hasError('companyId')">
+          <label><i class="bi bi-building"></i> Entreprise <span class="required">*</span></label>
+          <select [(ngModel)]="form.companyId" (change)="onCompanyChange()">
+            <option value="">— Sélectionner —</option>
+            <option *ngFor="let c of companies" [value]="c.id">{{ c.name }}</option>
+          </select>
+          <span class="field-error" *ngIf="hasError('companyId')">{{ errors['companyId'] }}</span>
+        </div>
+
+        <!-- ✅ Dropdown département filtré par company -->
+        <div class="form-group">
+          <label><i class="bi bi-diagram-3"></i> Département</label>
+          <select [(ngModel)]="form.departmentId" (change)="onDepartmentChange()">
+            <option value="">— Aucun —</option>
+            <option *ngFor="let d of filteredDepartments" [value]="d.id">{{ d.name }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <!-- ✅ Dropdown poste filtré par département -->
+        <div class="form-group">
+          <label><i class="bi bi-briefcase"></i> Poste</label>
+          <select [(ngModel)]="form.positionId">
+            <option value="">— Aucun —</option>
+            <option *ngFor="let p of filteredPositions" [value]="p.id">{{ p.name }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label><i class="bi bi-hash"></i> Code employé</label>
+          <input type="text" [(ngModel)]="form.employeeCode" placeholder="EMP-001" />
+        </div>
+      </div>
+
+      <!-- Section: Identité -->
+      <div class="form-section-title"><i class="bi bi-person-vcard"></i> Identité</div>
+      <div class="form-row">
+        <div class="form-group" [class.has-error]="hasError('firstName')">
+          <label><i class="bi bi-person"></i> Prénom <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="form.firstName" />
+          <span class="field-error" *ngIf="hasError('firstName')">{{ errors['firstName'] }}</span>
+        </div>
+        <div class="form-group" [class.has-error]="hasError('lastName')">
+          <label><i class="bi bi-person"></i> Nom <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="form.lastName" />
+          <span class="field-error" *ngIf="hasError('lastName')">{{ errors['lastName'] }}</span>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label><i class="bi bi-credit-card-2-front"></i> CIN</label>
+          <input type="text" [(ngModel)]="form.cin" placeholder="AB123456" />
+        </div>
+        <div class="form-group">
+          <label><i class="bi bi-shield-check"></i> N° CNSS</label>
+          <input type="text" [(ngModel)]="form.cnssNumber" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label><i class="bi bi-tag"></i> Matricule</label>
+          <input type="text" [(ngModel)]="form.matricule" />
+        </div>
+        <div class="form-group">
+          <label><i class="bi bi-gender-ambiguous"></i> Genre</label>
+          <select [(ngModel)]="form.gender">
+            <option value="">— Non spécifié —</option>
+            <option *ngFor="let g of genderOptions" [value]="g">{{ g }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label><i class="bi bi-calendar-heart"></i> Date de naissance</label>
+          <input type="date" [(ngModel)]="form.birthDate" />
+        </div>
+        <div class="form-group" [class.has-error]="hasError('hireDate')">
+          <label><i class="bi bi-calendar-check"></i> Date d'embauche <span class="required">*</span></label>
+          <input type="date" [(ngModel)]="form.hireDate" />
+          <span class="field-error" *ngIf="hasError('hireDate')">{{ errors['hireDate'] }}</span>
+        </div>
+      </div>
+
+      <!-- Section: Contact -->
+      <div class="form-section-title"><i class="bi bi-telephone"></i> Contact</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label><i class="bi bi-telephone"></i> Téléphone</label>
+          <input type="text" [(ngModel)]="form.phone" placeholder="+212 6XX XXX XXX" />
+        </div>
+        <div class="form-group">
+          <label><i class="bi bi-envelope"></i> Email</label>
+          <input type="email" [(ngModel)]="form.email" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label><i class="bi bi-geo-alt"></i> Adresse</label>
+          <input type="text" [(ngModel)]="form.address" />
+        </div>
+        <div class="form-group">
+          <label><i class="bi bi-buildings"></i> Ville</label>
+          <input type="text" [(ngModel)]="form.city" />
+        </div>
+      </div>
+
+      <!-- Section: Salaire & Paiement -->
+      <div class="form-section-title"><i class="bi bi-cash-stack"></i> Salaire & Paiement</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label><i class="bi bi-currency-dollar"></i> Salaire de base</label>
+          <input type="number" [(ngModel)]="form.baseSalary" placeholder="0.00" min="0" />
+        </div>
+        <div class="form-group">
+          <label><i class="bi bi-credit-card"></i> Mode de paiement</label>
+          <input type="text" [(ngModel)]="form.paymentMode" placeholder="Virement, Chèque..." />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label><i class="bi bi-bank"></i> Banque</label>
+          <input type="text" [(ngModel)]="form.bankName" />
+        </div>
+        <div class="form-group">
+          <label><i class="bi bi-wallet2"></i> N° Compte bancaire</label>
+          <input type="text" [(ngModel)]="form.bankAccountNumber" />
+        </div>
+      </div>
+
+      <!-- Statut -->
+      <div class="form-group">
+        <label><i class="bi bi-toggle-on"></i> Statut</label>
         <select [(ngModel)]="form.status">
-          <option value="ACTIVE">ACTIVE</option><option value="INACTIVE">INACTIVE</option>
-          <option value="SUSPENDED">SUSPENDED</option><option value="LEFT">LEFT</option>
+          <option *ngFor="let s of statusOptions" [value]="s">{{ s }}</option>
         </select>
       </div>
     </div>
+
     <div class="modal-footer">
-      <button class="btn btn-secondary" (click)="close()">Annuler</button>
-      <button class="btn btn-primary" (click)="save()">{{ editing ? 'Enregistrer' : 'Créer' }}</button>
+      <button class="btn btn-secondary" (click)="close()">
+        <i class="bi bi-x-circle"></i> Annuler
+      </button>
+      <button class="btn btn-primary" (click)="save()">
+        <i class="bi bi-check-circle"></i> {{ editing ? 'Enregistrer' : 'Créer' }}
+      </button>
     </div>
   </div>
 </div>

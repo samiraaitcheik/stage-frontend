@@ -1,57 +1,94 @@
 <div class="login-shell">
+
   <!-- Left panel — branding -->
   <div class="login-brand">
     <div class="brand-content">
+
       <div class="brand-logo">
-        <svg viewBox="0 0 48 48" fill="none">
-          <rect width="48" height="48" rx="14" fill="url(#lg1)"/>
-          <path d="M13 34V22l11-8 11 8v12" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
-          <rect x="19" y="25" width="6" height="9" rx="1.5" fill="#fff" opacity="0.95"/>
-          <rect x="27" y="20" width="7" height="4" rx="1" fill="#fff" opacity="0.6"/>
-          <defs>
-            <linearGradient id="lg1" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-              <stop stop-color="#6366f1"/>
-              <stop offset="1" stop-color="#8b5cf6"/>
-            </linearGradient>
-          </defs>
+        <svg viewBox="0 0 36 36" fill="none">
+          <path d="M6 28V18l12-9 12 9v10" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+          <rect x="13" y="21" width="5" height="7" rx="1" fill="#fff" opacity="0.9"/>
+          <rect x="20" y="17" width="7" height="3.5" rx="1" fill="#fff" opacity="0.5"/>
         </svg>
       </div>
+
       <h1 class="brand-name"><strong>HR</strong>Matrix</h1>
       <p class="brand-tagline">Plateforme de gestion des ressources humaines</p>
 
       <div class="brand-features">
         <div class="feature-item">
-          <div class="feature-dot"></div>
-          <span>Gestion complète des employés</span>
+          <div class="feature-icon">
+            <i class="bi bi-people-fill" style="color:#818cf8;"></i>
+          </div>
+          <div class="feature-text">
+            <strong>Gestion des employés</strong>
+            <span>Contrats, présences, profils</span>
+          </div>
         </div>
         <div class="feature-item">
-          <div class="feature-dot"></div>
-          <span>Paie & bulletins de salaire</span>
+          <div class="feature-icon">
+            <i class="bi bi-cash-stack" style="color:#34d399;"></i>
+          </div>
+          <div class="feature-text">
+            <strong>Paie & bulletins</strong>
+            <span>Calcul automatique CNSS, IR</span>
+          </div>
         </div>
         <div class="feature-item">
-          <div class="feature-dot"></div>
-          <span>Suivi des présences & contrats</span>
+          <div class="feature-icon">
+            <i class="bi bi-bar-chart-fill" style="color:#f59e0b;"></i>
+          </div>
+          <div class="feature-text">
+            <strong>Rapports & tableaux</strong>
+            <span>Statistiques en temps réel</span>
+          </div>
         </div>
         <div class="feature-item">
-          <div class="feature-dot"></div>
-          <span>Rapports & tableaux de bord</span>
+          <div class="feature-icon">
+            <i class="bi bi-shield-fill-check" style="color:#60a5fa;"></i>
+          </div>
+          <div class="feature-text">
+            <strong>Accès & permissions</strong>
+            <span>Rôles configurables par utilisateur</span>
+          </div>
         </div>
       </div>
     </div>
 
     <div class="brand-decoration">
-      <div class="deco-circle deco-1"></div>
-      <div class="deco-circle deco-2"></div>
-      <div class="deco-circle deco-3"></div>
+      <div class="deco-grid"></div>
+      <div class="deco-glow"></div>
+      <div class="deco-glow-2"></div>
+    </div>
+
+    <div class="brand-stats">
+      <div class="stat-item">
+        <span class="stat-value">100%</span>
+        <span class="stat-label">Conforme Maroc</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value">CNSS</span>
+        <span class="stat-label">Déclarations auto</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value">Sécurisé</span>
+        <span class="stat-label">JWT + Rôles</span>
+      </div>
     </div>
   </div>
 
   <!-- Right panel — form -->
   <div class="login-panel">
     <div class="login-card">
+
+      <div class="card-badge">
+        <div class="badge-dot"></div>
+        Espace sécurisé
+      </div>
+
       <div class="login-header">
         <h2>Connexion</h2>
-        <p>Accédez à votre espace administrateur</p>
+        <p>Accédez à votre tableau de bord RH</p>
       </div>
 
       <!-- Error message -->
@@ -67,7 +104,7 @@
         <div class="field-group">
           <label for="email">Adresse email</label>
           <div class="input-wrapper">
-            <svg class="input-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="18">
+            <svg class="input-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="17">
               <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
               <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
             </svg>
@@ -75,7 +112,7 @@
               id="email"
               type="email"
               [(ngModel)]="email"
-              placeholder="admin@exemple.com"
+              placeholder="votre@email.com"
               (keydown)="onKeydown($event)"
               autocomplete="email"
             />
@@ -86,7 +123,7 @@
         <div class="field-group">
           <label for="password">Mot de passe</label>
           <div class="input-wrapper">
-            <svg class="input-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="18">
+            <svg class="input-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="17">
               <path d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"/>
             </svg>
             <input
@@ -98,11 +135,11 @@
               autocomplete="current-password"
             />
             <button class="toggle-pass" type="button" (click)="showPass = !showPass" tabindex="-1">
-              <svg *ngIf="!showPass" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="17">
+              <svg *ngIf="!showPass" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16">
                 <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
                 <path d="M2 10s3-6 8-6 8 6 8 6-3 6-8 6-8-6-8-6z"/>
               </svg>
-              <svg *ngIf="showPass" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="17">
+              <svg *ngIf="showPass" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16">
                 <path d="M3 3l14 14M10 12a2 2 0 01-2-2m4.93-.07A2 2 0 0110 12M2 10s1.2-2.4 3.5-4M17.5 7A11.7 11.7 0 0118 10s-3 6-8 6a7.4 7.4 0 01-3-.6"/>
               </svg>
             </button>
@@ -110,23 +147,20 @@
         </div>
 
         <!-- Submit -->
-        <button
-          class="login-btn"
-          (click)="submit()"
-          [disabled]="loading()"
-        >
+        <button class="login-btn" (click)="submit()" [disabled]="loading()">
           <span *ngIf="!loading()">Se connecter</span>
           <span *ngIf="loading()" class="btn-loading">
             <svg class="spin" viewBox="0 0 24 24" fill="none" width="18">
               <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="31.4" stroke-dashoffset="10"/>
             </svg>
-            Connexion...
+            Connexion en cours...
           </span>
         </button>
       </div>
 
       <div class="login-footer">
-        <span>Accès réservé aux administrateurs autorisés</span>
+        <i class="bi bi-lock-fill footer-lock"></i>
+        <span>Connexion chiffrée — accès réservé aux administrateurs</span>
       </div>
     </div>
   </div>

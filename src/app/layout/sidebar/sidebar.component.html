@@ -21,45 +21,51 @@
 
   <nav class="sidebar-nav">
     <ul>
-      <li *ngFor="let item of navItems" [class.has-children]="item.children" [class.expanded]="item.expanded">
+      <ng-container *ngFor="let item of navItems">
+        <li *ngIf="isVisible(item)"
+            [class.has-children]="item.children"
+            [class.expanded]="item.expanded">
 
-        <!-- Direct link -->
-        <a *ngIf="!item.children" [routerLink]="item.route" routerLinkActive="active"
-           class="nav-item" [title]="collapsed ? item.label : ''">
-          <span class="nav-icon" [innerHTML]="getIcon(item.icon)"></span>
-          <span class="nav-label" *ngIf="!collapsed">{{ item.label }}</span>
-        </a>
+          <!-- Direct link -->
+          <a *ngIf="!item.children" [routerLink]="item.route" routerLinkActive="active"
+             class="nav-item" [title]="collapsed ? item.label : ''">
+            <i class="bi {{ item.icon }} nav-icon-bi"></i>
+            <span class="nav-label" *ngIf="!collapsed">{{ item.label }}</span>
+          </a>
 
-        <!-- Group toggle -->
-        <button *ngIf="item.children" class="nav-item nav-group-toggle"
-                (click)="toggleGroup(item)" [title]="collapsed ? item.label : ''">
-          <span class="nav-icon" [innerHTML]="getIcon(item.icon)"></span>
-          <span class="nav-label" *ngIf="!collapsed">{{ item.label }}</span>
-          <span class="nav-arrow" *ngIf="!collapsed" [class.rotated]="item.expanded">
-            <svg viewBox="0 0 20 20" fill="currentColor" width="14"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
-          </span>
-        </button>
+          <!-- Group toggle -->
+          <button *ngIf="item.children" class="nav-item nav-group-toggle"
+                  (click)="toggleGroup(item)" [title]="collapsed ? item.label : ''">
+            <i class="bi {{ item.icon }} nav-icon-bi"></i>
+            <span class="nav-label" *ngIf="!collapsed">{{ item.label }}</span>
+            <span class="nav-arrow" *ngIf="!collapsed" [class.rotated]="item.expanded">
+              <i class="bi bi-chevron-down"></i>
+            </span>
+          </button>
 
-        <!-- Children -->
-        <ul class="nav-children" *ngIf="item.children && (item.expanded || collapsed)">
-          <li *ngFor="let child of item.children">
-            <a [routerLink]="child.route" routerLinkActive="active"
-               class="nav-item nav-child" [title]="child.label">
-              <span class="nav-icon" [innerHTML]="getIcon(child.icon)"></span>
-              <span class="nav-label" *ngIf="!collapsed">{{ child.label }}</span>
-            </a>
-          </li>
-        </ul>
-      </li>
+          <!-- Children -->
+          <ul class="nav-children" *ngIf="item.children && (item.expanded || collapsed)">
+            <ng-container *ngFor="let child of visibleChildren(item)">
+              <li>
+                <a [routerLink]="child.route" routerLinkActive="active"
+                   class="nav-item nav-child" [title]="child.label">
+                  <i class="bi {{ child.icon }} nav-icon-bi"></i>
+                  <span class="nav-label" *ngIf="!collapsed">{{ child.label }}</span>
+                </a>
+              </li>
+            </ng-container>
+          </ul>
+        </li>
+      </ng-container>
     </ul>
   </nav>
 
   <div class="sidebar-footer" *ngIf="!collapsed">
     <div class="user-info">
-      <div class="user-avatar">A</div>
+      <div class="user-avatar">{{ userInitials }}</div>
       <div class="user-details">
-        <span class="user-name">Administrateur</span>
-        <span class="user-role">Super Admin</span>
+        <span class="user-name">{{ userName }}</span>
+        <span class="user-role">{{ userRole }}</span>
       </div>
     </div>
   </div>

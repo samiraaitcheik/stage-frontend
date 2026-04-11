@@ -1,20 +1,26 @@
 <div class="page-header">
   <div>
     <h1>Utilisateurs</h1>
-    <p class="page-subtitle">Gestion des utilisateurs</p>
+    <p class="page-subtitle">Gestion des utilisateurs et leurs permissions</p>
   </div>
   <button class="btn btn-primary" (click)="openCreate()">
-    <svg viewBox="0 0 20 20" fill="currentColor" width="16"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/></svg>
+    <i class="bi bi-person-plus-fill"></i>
     Ajouter
   </button>
 </div>
 
+<!-- Toast notification -->
+<div class="toast-notif" *ngIf="toast">
+  <i class="bi bi-check-circle-fill"></i>
+  {{ toast }}
+</div>
+
 <div class="table-container">
   <div class="table-toolbar">
-    <h2>Utilisateurs</h2>
+    <h2>Liste des utilisateurs</h2>
     <div class="search-input">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" placeholder="Rechercher..." [(ngModel)]="search" (input)="onSearch()" />
+      <i class="bi bi-search"></i>
+      <input type="text" placeholder="Rechercher par nom, email ou rôle..." [(ngModel)]="search" (input)="onSearch()" />
     </div>
   </div>
 
@@ -24,24 +30,57 @@
     <table *ngIf="filtered.length > 0">
       <thead>
         <tr>
-          <th>Nom d'utilisateur</th>
+          <th>Utilisateur</th>
           <th>Email</th>
           <th>Rôle</th>
+          <th>Permissions</th>
+          <th>Statut</th>
           <th>Actions</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let item of filtered">
-          <td>{{ item.username }}</td>
-          <td>{{ item.email }}</td>
-          <td>{{ item.role }}</td>
+          <td>
+            <div class="user-cell">
+              <div class="user-avatar-sm">{{ getInitials(item) }}</div>
+              <span class="user-fullname">{{ item.firstName }} {{ item.lastName }}</span>
+            </div>
+          </td>
+          <td class="text-muted">{{ item.email }}</td>
+          <td>
+            <span class="badge" [ngClass]="roleBadgeClass(item.role)">{{ item.role }}</span>
+          </td>
+          <td>
+            <div class="perm-pills">
+              <ng-container *ngIf="item.role === 'ADMIN'">
+                <span class="perm-pill perm-all">
+                  <i class="bi bi-shield-fill-check"></i> Accès total
+                </span>
+              </ng-container>
+              <ng-container *ngIf="item.role !== 'ADMIN'">
+                <ng-container *ngIf="item.permissions?.length; else noPerms">
+                  <span class="perm-pill" *ngFor="let p of (item.permissions | slice:0:3)">{{ p }}</span>
+                  <span class="perm-pill perm-more" *ngIf="item.permissions.length > 3">+{{ item.permissions.length - 3 }}</span>
+                </ng-container>
+                <ng-template #noPerms>
+                  <span class="text-muted" style="font-size:12px;">Aucune permission</span>
+                </ng-template>
+              </ng-container>
+            </div>
+          </td>
+          <td>
+            <span class="status-dot" [class.active]="item.status === 'ACTIVE'">
+              <i class="bi bi-circle-fill"></i>
+              {{ item.status === 'ACTIVE' ? 'Actif' : item.status }}
+            </span>
+          </td>
           <td>
             <div class="actions">
               <button class="btn btn-icon btn-secondary" (click)="openEdit(item)" title="Modifier">
-                <svg viewBox="0 0 20 20" fill="currentColor" width="14"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/></svg>
+                <i class="bi bi-pencil"></i>
               </button>
-              <button class="btn btn-icon btn-danger" (click)="delete(item.id)" title="Supprimer">
-                <svg viewBox="0 0 20 20" fill="currentColor" width="14"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+              <button class="btn btn-icon btn-danger" (click)="delete(item)" title="Supprimer">
+                <i class="bi bi-trash"></i>
               </button>
             </div>
           </td>
@@ -51,41 +90,140 @@
 
     <div class="empty-state" *ngIf="filtered.length === 0">
       <div class="empty-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
+        <i class="bi bi-people" style="font-size:40px; color:var(--text-muted);"></i>
       </div>
       <h3>Aucun résultat</h3>
-      <p>Aucun élément trouvé. Commencez par en ajouter un.</p>
+      <p>Aucun utilisateur trouvé. Commencez par en ajouter un.</p>
     </div>
   </div>
 </div>
 
 <!-- Modal -->
 <div class="modal-overlay" *ngIf="showModal" (click)="close()">
-  <div class="modal" (click)="$event.stopPropagation()">
+  <div class="modal modal-lg" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h3>{{ editing ? 'Modifier' : 'Ajouter' }} – Utilisateurs</h3>
+      <div class="modal-title-group">
+        <i class="bi" [ngClass]="editing ? 'bi-pencil-square' : 'bi-person-plus-fill'" style="color:var(--accent);font-size:18px;"></i>
+        <h3>{{ editing ? 'Modifier l\'utilisateur' : 'Créer un utilisateur' }}</h3>
+      </div>
       <button class="btn btn-icon btn-secondary" (click)="close()">
-        <svg viewBox="0 0 20 20" fill="currentColor" width="16"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+        <i class="bi bi-x-lg"></i>
       </button>
     </div>
+
     <div class="modal-body">
-      <div class="error-msg" *ngIf="error">{{ error }}</div>
-    <div class="form-group">
-      <label>Nom d'utilisateur</label>
-      <input type="text" [(ngModel)]="form.username" placeholder="Nom d'utilisateur" />
+      <div class="error-msg" *ngIf="error">
+        <i class="bi bi-exclamation-triangle-fill"></i> {{ error }}
+      </div>
+
+      <!-- Identité -->
+      <div class="section-label">
+        <i class="bi bi-person"></i> Informations personnelles
+      </div>
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label>Prénom <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="form.firstName" placeholder="Mohammed" />
+        </div>
+        <div class="form-group">
+          <label>Nom <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="form.lastName" placeholder="Alami" />
+        </div>
+      </div>
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label>Email <span class="required">*</span></label>
+          <input type="email" [(ngModel)]="form.email" placeholder="m.alami@entreprise.ma" />
+        </div>
+        <div class="form-group">
+          <label>Téléphone</label>
+          <input type="text" [(ngModel)]="form.phone" placeholder="+212 6 00 00 00 00" />
+        </div>
+      </div>
+
+      <!-- Mot de passe -->
+      <div class="section-label" style="margin-top:20px;">
+        <i class="bi bi-key"></i> Mot de passe {{ editing ? '(laisser vide pour ne pas modifier)' : '' }}
+      </div>
+      <div class="form-group">
+        <div class="password-row">
+          <div class="input-with-toggle" style="flex:1;">
+            <input [type]="showPassword ? 'text' : 'password'" [(ngModel)]="form.password"
+                   placeholder="{{ editing ? 'Nouveau mot de passe (optionnel)' : 'Mot de passe obligatoire' }}" />
+            <button class="toggle-eye" type="button" (click)="showPassword = !showPassword">
+              <i class="bi" [ngClass]="showPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+            </button>
+          </div>
+          <button class="btn-gen" (click)="generatePassword('basic')">
+            <i class="bi bi-dice-3"></i> Basique
+          </button>
+          <button class="btn-gen btn-gen-strong" (click)="generatePassword('strong')">
+            <i class="bi bi-shield-lock"></i> Fort
+          </button>
+        </div>
+        <div class="pass-preview" *ngIf="form.password && showPassword">
+          <i class="bi bi-clipboard"></i>
+          Mot de passe: <strong>{{ form.password }}</strong>
+        </div>
+      </div>
+
+      <!-- Rôle -->
+      <div class="section-label" style="margin-top:20px;">
+        <i class="bi bi-briefcase"></i> Rôle et accès
+      </div>
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label>Rôle <span class="required">*</span></label>
+          <select [(ngModel)]="form.role" (ngModelChange)="onRoleChange()">
+            <option value="" disabled>-- Choisir un rôle --</option>
+            <option *ngFor="let r of ROLES" [value]="r">{{ r }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Statut</label>
+          <select [(ngModel)]="form.status">
+            <option value="ACTIVE">Actif</option>
+            <option value="INACTIVE">Inactif</option>
+            <option value="BLOCKED">Bloqué</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Permissions -->
+      <div class="perm-section" *ngIf="form.role !== 'ADMIN'">
+        <div class="perm-header">
+          <span class="section-label" style="margin:0;border:none;padding:0;">
+            <i class="bi bi-toggles"></i> Permissions d'accès
+          </span>
+          <span class="perm-hint">Cliquez pour activer / désactiver</span>
+        </div>
+        <div class="perm-grid">
+          <div class="perm-item" *ngFor="let p of PERMISSIONS"
+               [class.perm-on]="isPermChecked(p.key)"
+               (click)="togglePermission(p.key)">
+            <div class="perm-checkbox">
+              <i class="bi" [ngClass]="isPermChecked(p.key) ? 'bi-check-lg' : ''"></i>
+            </div>
+            <i class="bi {{ p.icon }} perm-icon"></i>
+            <span class="perm-label">{{ p.label }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-notice" *ngIf="form.role === 'ADMIN'">
+        <i class="bi bi-shield-fill-check"></i>
+        Le rôle <strong>ADMIN</strong> dispose de l'accès total à toutes les fonctionnalités de l'application.
+      </div>
     </div>
-    <div class="form-group">
-      <label>Email</label>
-      <input type="text" [(ngModel)]="form.email" placeholder="Email" />
-    </div>
-    <div class="form-group">
-      <label>Rôle</label>
-      <input type="text" [(ngModel)]="form.role" placeholder="Rôle" />
-    </div>
-    </div>
+
     <div class="modal-footer">
-      <button class="btn btn-secondary" (click)="close()">Annuler</button>
-      <button class="btn btn-primary" (click)="save()">{{ editing ? 'Enregistrer' : 'Créer' }}</button>
+      <button class="btn btn-secondary" (click)="close()">
+        <i class="bi bi-x-circle"></i> Annuler
+      </button>
+      <button class="btn btn-primary" (click)="save()">
+        <i class="bi bi-check-circle-fill"></i>
+        {{ editing ? 'Enregistrer les modifications' : 'Créer l\'utilisateur' }}
+      </button>
     </div>
   </div>
 </div>

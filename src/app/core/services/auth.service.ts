@@ -20,6 +20,7 @@ export interface AuthResponse {
     role: string;
     companyId: string;
     status: string;
+    permissions: string[];
   };
 }
 
@@ -46,6 +47,17 @@ export class AuthService {
   readonly isLoggedIn  = computed(() => !!this._token() && !this.isExpired());
   readonly isAdmin     = computed(() => this._user()?.role === 'ADMIN');
   readonly userRole    = computed(() => this._user()?.role ?? null);
+
+  hasPermission(permission: string): boolean {
+    const user = this._user();
+    if (!user) return false;
+    if (user.role === 'ADMIN') return true; // Admin a tout
+    return (user.permissions ?? []).includes(permission);
+  }
+
+  getPermissions(): string[] {
+    return this._user()?.permissions ?? [];
+  }
 
   constructor(private http: HttpClient, private router: Router) {}
 

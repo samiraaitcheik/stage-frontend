@@ -1,5 +1,3 @@
-// ─── Enums ────────────────────────────────────────────────────────────────────
-
 export type CompanyStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
 export type UserStatus = 'ACTIVE' | 'INACTIVE' | 'BLOCKED';
 export type EmployeeStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'LEFT';

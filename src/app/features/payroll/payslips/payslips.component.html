@@ -1,103 +1,144 @@
 <div class="page-header">
-  <div>
-    <h1>Bulletins de paie</h1>
-    <p class="page-subtitle">Gestion des bulletins de paie</p>
-  </div>
-  <button class="btn btn-primary" (click)="openCreate()">
-    <svg viewBox="0 0 20 20" fill="currentColor" width="16"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/></svg>
-    Ajouter
-  </button>
+  <div><h1>Bulletins de paie</h1><p class="page-subtitle">Gestion des bulletins de salaire</p></div>
+  <button class="btn btn-primary" (click)="openCreate()"><i class="bi bi-plus-lg"></i> Ajouter</button>
 </div>
 
 <div class="table-container">
   <div class="table-toolbar">
     <h2>Bulletins de paie</h2>
     <div class="search-input">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" placeholder="Rechercher..." [(ngModel)]="search" (input)="onSearch()" />
+      <i class="bi bi-search"></i>
+      <input type="text" placeholder="Rechercher par employé, période ou statut..." [(ngModel)]="search" (input)="onSearch()" />
     </div>
   </div>
-
   <div *ngIf="loading" class="loading-spinner"></div>
-
   <div class="table-scroll" *ngIf="!loading">
     <table *ngIf="filtered.length > 0">
       <thead>
-        <tr>
-          <th>ID Employé</th>
-          <th>ID Période</th>
-          <th>Salaire brut</th>
-          <th>Salaire net</th>
-          <th>Déductions</th>
-          <th>Actions</th>
-        </tr>
+        <tr><th>Employé</th><th>Période</th><th>Statut</th><th>Salaire brut</th><th>Déductions</th><th>Salaire net</th><th>Actions</th></tr>
       </thead>
       <tbody>
         <tr *ngFor="let item of filtered">
-          <td>{{ item.employeeId }}</td>
-          <td>{{ item.payrollPeriodId }}</td>
-          <td>{{ item.grossSalary }}</td>
-          <td>{{ item.netSalary }}</td>
-          <td>{{ item.totalDeductions }}</td>
+          <td>
+            <div class="emp-cell">
+              <div class="emp-avatar">{{ getEmployeeName(item.employeeId).charAt(0) }}</div>
+              {{ getEmployeeName(item.employeeId) }}
+            </div>
+          </td>
+          <td>{{ getPeriodLabel(item.payrollPeriodId) }}</td>
+          <td><span class="badge" [ngClass]="statusClass(item.status)">{{ item.status }}</span></td>
+          <td class="amount-cell">{{ item.grossSalary | number:'1.2-2' }} MAD</td>
+          <td class="amount-cell text-danger">{{ item.totalDeductions | number:'1.2-2' }} MAD</td>
+          <td class="amount-cell text-success"><strong>{{ item.netSalary | number:'1.2-2' }} MAD</strong></td>
           <td>
             <div class="actions">
-              <button class="btn btn-icon btn-secondary" (click)="openEdit(item)" title="Modifier">
-                <svg viewBox="0 0 20 20" fill="currentColor" width="14"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/></svg>
-              </button>
-              <button class="btn btn-icon btn-danger" (click)="delete(item.id)" title="Supprimer">
-                <svg viewBox="0 0 20 20" fill="currentColor" width="14"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
-              </button>
+              <button class="btn btn-icon btn-secondary" (click)="openEdit(item)"><i class="bi bi-pencil"></i></button>
+              <button class="btn btn-icon btn-danger" (click)="delete(item.id)"><i class="bi bi-trash"></i></button>
             </div>
           </td>
         </tr>
       </tbody>
     </table>
-
     <div class="empty-state" *ngIf="filtered.length === 0">
-      <div class="empty-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
-      </div>
-      <h3>Aucun résultat</h3>
-      <p>Aucun élément trouvé. Commencez par en ajouter un.</p>
+      <i class="bi bi-file-earmark-richtext" style="font-size:40px;color:var(--text-muted);"></i>
+      <h3>Aucun bulletin</h3><p>Générez des bulletins de paie.</p>
     </div>
   </div>
 </div>
 
-<!-- Modal -->
 <div class="modal-overlay" *ngIf="showModal" (click)="close()">
-  <div class="modal" (click)="$event.stopPropagation()">
+  <div class="modal modal-lg" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h3>{{ editing ? 'Modifier' : 'Ajouter' }} – Bulletins de paie</h3>
-      <button class="btn btn-icon btn-secondary" (click)="close()">
-        <svg viewBox="0 0 20 20" fill="currentColor" width="16"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
-      </button>
+      <h3><i class="bi bi-file-earmark-richtext-fill" style="color:var(--accent);"></i> {{ editing ? 'Modifier le bulletin' : 'Nouveau bulletin de paie' }}</h3>
+      <button class="btn btn-icon btn-secondary" (click)="close()"><i class="bi bi-x-lg"></i></button>
     </div>
     <div class="modal-body">
-      <div class="error-msg" *ngIf="errors['api']">{{ errors["api"] }}</div>
-    <div class="form-group">
-      <label>ID Employé</label>
-      <input type="text" [(ngModel)]="form.employeeId" placeholder="ID Employé" />
-    </div>
-    <div class="form-group">
-      <label>ID Période</label>
-      <input type="text" [(ngModel)]="form.payrollPeriodId" placeholder="ID Période" />
-    </div>
-    <div class="form-group">
-      <label>Salaire brut</label>
-      <input type="text" [(ngModel)]="form.grossSalary" placeholder="Salaire brut" />
-    </div>
-    <div class="form-group">
-      <label>Salaire net</label>
-      <input type="text" [(ngModel)]="form.netSalary" placeholder="Salaire net" />
-    </div>
-    <div class="form-group">
-      <label>Déductions</label>
-      <input type="text" [(ngModel)]="form.totalDeductions" placeholder="Déductions" />
-    </div>
+      <div class="error-msg" *ngIf="error"><i class="bi bi-exclamation-triangle-fill"></i> {{ error }}</div>
+
+      <div class="form-group">
+        <label>Employé <span class="req">*</span></label>
+        <select [(ngModel)]="form.employeeId">
+          <option value="" disabled>-- Sélectionner un employé --</option>
+          <option *ngFor="let e of employees" [value]="e.id">{{ e.firstName }} {{ e.lastName }}</option>
+        </select>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label>Période de paie <span class="req">*</span></label>
+          <select [(ngModel)]="form.payrollPeriodId">
+            <option value="" disabled>-- Sélectionner une période --</option>
+            <option *ngFor="let p of periods" [value]="p.id">{{ p.month }}/{{ p.year }} — {{ p.status }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Exécution <small>(optionnel)</small></label>
+          <select [(ngModel)]="form.payrollRunId">
+            <option value="">-- Aucune --</option>
+            <option *ngFor="let r of runs" [value]="r.id">Run #{{ r.runNumber }} — {{ r.status }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label>Statut</label>
+          <select [(ngModel)]="form.status">
+            <option *ngFor="let s of statusOptions" [value]="s">{{ s }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Devise</label>
+          <input type="text" [(ngModel)]="form.currency" placeholder="MAD" />
+        </div>
+      </div>
+
+      <div class="section-divider">Montants</div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label>Salaire brut (MAD)</label>
+          <input type="number" step="0.01" min="0" [(ngModel)]="form.grossSalary" />
+        </div>
+        <div class="form-group">
+          <label>Salaire net (MAD)</label>
+          <input type="number" step="0.01" min="0" [(ngModel)]="form.netSalary" />
+        </div>
+      </div>
+
+      <div class="form-grid-3">
+        <div class="form-group">
+          <label>Allocations</label>
+          <input type="number" step="0.01" min="0" [(ngModel)]="form.totalAllowances" />
+        </div>
+        <div class="form-group">
+          <label>Primes</label>
+          <input type="number" step="0.01" min="0" [(ngModel)]="form.totalBonuses" />
+        </div>
+        <div class="form-group">
+          <label>Déductions</label>
+          <input type="number" step="0.01" min="0" [(ngModel)]="form.totalDeductions" />
+        </div>
+      </div>
+
+      <div class="form-grid-3">
+        <div class="form-group">
+          <label>Avances</label>
+          <input type="number" step="0.01" min="0" [(ngModel)]="form.totalAdvances" />
+        </div>
+        <div class="form-group">
+          <label>IR</label>
+          <input type="number" step="0.01" min="0" [(ngModel)]="form.totalTax" />
+        </div>
+        <div class="form-group">
+          <label>CNSS</label>
+          <input type="number" step="0.01" min="0" [(ngModel)]="form.totalCnss" />
+        </div>
+      </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" (click)="close()">Annuler</button>
-      <button class="btn btn-primary" (click)="save()">{{ editing ? 'Enregistrer' : 'Créer' }}</button>
+      <button class="btn btn-secondary" (click)="close()"><i class="bi bi-x-circle"></i> Annuler</button>
+      <button class="btn btn-primary" (click)="save()"><i class="bi bi-check-circle-fill"></i> {{ editing ? 'Enregistrer' : 'Créer' }}</button>
     </div>
   </div>
 </div>

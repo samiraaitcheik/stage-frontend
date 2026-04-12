@@ -3,15 +3,18 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
   EmployeeService, DepartmentService,
-  PositionService, CompanyService
+  PositionService
 } from '../../core/services/domain.services';
+import { ApiService } from '../../core/services/api.service';
+import { AuthService } from '../../core/services/auth.service';
 import {
   Employee, Department, Position, Company,
   CreateEmployeePayload, UpdateEmployeePayload,
   EMPLOYEE_STATUS_OPTIONS, GENDER_OPTIONS,
   FormErrors, validateRequired
 } from '../../core/models';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-employees',
@@ -21,11 +24,11 @@ import { forkJoin } from 'rxjs';
   styleUrls: ['./employees.component.scss']
 })
 export class EmployeesComponent implements OnInit {
-  items: Employee[]     = [];
-  filtered: Employee[]  = [];
-  companies: Company[]  = [];
+  items: Employee[]         = [];
+  filtered: Employee[]      = [];
+  companies: Company[]      = [];
   departments: Department[] = [];
-  positions: Position[] = [];
+  positions: Position[]     = [];
 
   loading   = true;
   showModal = false;
@@ -40,18 +43,19 @@ export class EmployeesComponent implements OnInit {
   form: any = this.emptyForm();
 
   constructor(
-    private service:     EmployeeService,
-    private compSvc:     CompanyService,
-    private deptSvc:     DepartmentService,
-    private posSvc:      PositionService,
+    private service:  EmployeeService,
+    private deptSvc:  DepartmentService,
+    private posSvc:   PositionService,
+    private api:      ApiService,
+    public  auth:     AuthService,
   ) {}
 
   ngOnInit() {
     forkJoin({
-      employees:   this.service.getAll(),
-      companies:   this.compSvc.getAll(),
-      departments: this.deptSvc.getAll(),
-      positions:   this.posSvc.getAll(),
+      employees:   this.service.getAll().pipe(catchError(() => of([]))),
+      companies:   this.api.get<Company[]>('/companies/mine').pipe(catchError(() => of([]))),
+      departments: this.deptSvc.getAll().pipe(catchError(() => of([]))),
+      positions:   this.posSvc.getAll().pipe(catchError(() => of([]))),
     }).subscribe({
       next: (d) => {
         this.items       = d.employees;
@@ -83,44 +87,45 @@ export class EmployeesComponent implements OnInit {
 
   openCreate() {
     this.form = this.emptyForm();
+    this.form.companyId = this.auth.currentUser()?.companyId ?? '';
     this.editing = false; this.editingId = ''; this.errors = {};
     this.showModal = true;
   }
 
   openEdit(item: Employee) {
     this.form = {
-      companyId:          item.companyId,
-      employeeCode:       item.employeeCode       ?? '',
-      firstName:          item.firstName,
-      lastName:           item.lastName,
-      cin:                item.cin                ?? '',
-      cnssNumber:         item.cnssNumber         ?? '',
-      matricule:          item.matricule           ?? '',
-      gender:             item.gender              ?? '',
-      birthDate:          item.birthDate?.slice(0, 10) ?? '',
-      phone:              item.phone               ?? '',
-      email:              item.email               ?? '',
-      address:            item.address             ?? '',
-      city:               item.city                ?? '',
-      hireDate:           item.hireDate?.slice(0, 10) ?? '',
-      status:             item.status,
-      departmentId:       item.departmentId        ?? '',
-      positionId:         item.positionId          ?? '',
-      baseSalary:         item.baseSalary          ?? null,
-      paymentMode:        item.paymentMode         ?? '',
-      bankName:           item.bankName            ?? '',
-      bankAccountNumber:  item.bankAccountNumber   ?? '',
+      companyId:         item.companyId,
+      employeeCode:      item.employeeCode      ?? '',
+      firstName:         item.firstName,
+      lastName:          item.lastName,
+      cin:               item.cin               ?? '',
+      cnssNumber:        item.cnssNumber         ?? '',
+      matricule:         item.matricule          ?? '',
+      gender:            item.gender             ?? '',
+      birthDate:         item.birthDate?.slice(0, 10) ?? '',
+      phone:             item.phone              ?? '',
+      email:             item.email              ?? '',
+      address:           item.address            ?? '',
+      city:              item.city               ?? '',
+      hireDate:          item.hireDate?.slice(0, 10) ?? '',
+      status:            item.status,
+      departmentId:      item.departmentId       ?? '',
+      positionId:        item.positionId         ?? '',
+      baseSalary:        item.baseSalary         ?? null,
+      paymentMode:       item.paymentMode        ?? '',
+      bankName:          item.bankName           ?? '',
+      bankAccountNumber: item.bankAccountNumber  ?? '',
     };
     this.editing = true; this.editingId = item.id; this.errors = {};
     this.showModal = true;
   }
 
   save() {
-    this.errors = validateRequired(this.form, ['companyId', 'firstName', 'lastName', 'hireDate']);
+    this.errors = validateRequired(this.form, ['firstName', 'lastName', 'hireDate']);
     if (Object.keys(this.errors).length) return;
 
     const payload: any = { ...this.form };
-    // Nettoyer les champs vides
+    payload.companyId = this.auth.currentUser()?.companyId;
     if (!payload.gender)       delete payload.gender;
     if (!payload.departmentId) delete payload.departmentId;
     if (!payload.positionId)   delete payload.positionId;
@@ -142,34 +147,22 @@ export class EmployeesComponent implements OnInit {
     this.service.delete(id).subscribe(() => this.load());
   }
 
-  // ✅ Positions filtrées selon le département sélectionné
   get filteredPositions(): Position[] {
     if (!this.form.departmentId) return this.positions;
     return this.positions.filter(p => p.departmentId === this.form.departmentId);
   }
 
-  // ✅ Departments filtrés selon la company sélectionnée
   get filteredDepartments(): Department[] {
     if (!this.form.companyId) return this.departments;
     return this.departments.filter(d => d.companyId === this.form.companyId);
   }
 
-  // Helpers affichage table
-  companyName(id: string)    { return this.companies.find(c => c.id === id)?.name ?? '—'; }
-  departmentName(id?: string | null) { return id ? (this.departments.find(d => d.id === id)?.name ?? '—') : '—'; }
-  positionName(id?: string | null)   { return id ? (this.positions.find(p => p.id === id)?.name ?? '—') : '—'; }
+  companyName(id: string)              { return this.companies.find(c => c.id === id)?.name ?? '—'; }
+  departmentName(id?: string | null)   { return id ? (this.departments.find(d => d.id === id)?.name ?? '—') : '—'; }
+  positionName(id?: string | null)     { return id ? (this.positions.find(p => p.id === id)?.name ?? '—') : '—'; }
 
-  onCompanyChange() {
-    // Reset département et poste si on change d'entreprise
-    this.form.departmentId = '';
-    this.form.positionId   = '';
-  }
-
-  onDepartmentChange() {
-    // Reset poste si on change de département
-    this.form.positionId = '';
-  }
-
+  onCompanyChange()    { this.form.departmentId = ''; this.form.positionId = ''; }
+  onDepartmentChange() { this.form.positionId = ''; }
   close()              { this.showModal = false; }
   hasError(f: string)  { return !!this.errors[f]; }
 

@@ -1,24 +1,22 @@
 <aside class="sidebar" [class.collapsed]="collapsed">
+
+  <!-- Logo + Toggle -->
   <div class="sidebar-logo">
     <div class="logo-icon">
       <svg viewBox="0 0 36 36" fill="none">
-        <rect width="36" height="36" rx="10" fill="url(#g1)"/>
-        <path d="M10 26V16l8-6 8 6v10" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-        <rect x="14" y="19" width="4" height="7" rx="1" fill="#fff" opacity="0.9"/>
-        <rect x="20" y="15" width="6" height="3" rx="1" fill="#fff" opacity="0.6"/>
-        <defs>
-          <linearGradient id="g1" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#6366f1"/>
-            <stop offset="1" stop-color="#8b5cf6"/>
-          </linearGradient>
-        </defs>
+        <path d="M6 28V18l12-9 12 9v10" stroke="#93c5fd" stroke-width="2.2" stroke-linecap="round"/>
+        <rect x="13" y="21" width="5" height="7" rx="1" fill="#93c5fd" opacity="0.9"/>
+        <rect x="20" y="17" width="7" height="3.5" rx="1" fill="#93c5fd" opacity="0.45"/>
       </svg>
     </div>
-    <span class="logo-text" *ngIf="!collapsed">
-      <strong>HR</strong>Matrix
-    </span>
+    <span class="logo-text" *ngIf="!collapsed"><strong>HR</strong>Matrix</span>
+
+    <button class="toggle-btn" (click)="toggleCollapse()" [title]="collapsed ? 'Développer' : 'Réduire'">
+      <i class="bi" [ngClass]="collapsed ? 'bi-chevron-right' : 'bi-chevron-left'"></i>
+    </button>
   </div>
 
+  <!-- Nav -->
   <nav class="sidebar-nav">
     <ul>
       <ng-container *ngFor="let item of navItems">
@@ -27,15 +25,20 @@
             [class.expanded]="item.expanded">
 
           <!-- Direct link -->
-          <a *ngIf="!item.children" [routerLink]="item.route" routerLinkActive="active"
-             class="nav-item" [title]="collapsed ? item.label : ''">
+          <a *ngIf="!item.children"
+             [routerLink]="item.route"
+             routerLinkActive="active"
+             class="nav-item"
+             [title]="collapsed ? item.label : ''">
             <i class="bi {{ item.icon }} nav-icon-bi"></i>
             <span class="nav-label" *ngIf="!collapsed">{{ item.label }}</span>
           </a>
 
           <!-- Group toggle -->
-          <button *ngIf="item.children" class="nav-item nav-group-toggle"
-                  (click)="toggleGroup(item)" [title]="collapsed ? item.label : ''">
+          <button *ngIf="item.children"
+                  class="nav-item nav-group-toggle"
+                  (click)="toggleGroup(item)"
+                  [title]="collapsed ? item.label : ''">
             <i class="bi {{ item.icon }} nav-icon-bi"></i>
             <span class="nav-label" *ngIf="!collapsed">{{ item.label }}</span>
             <span class="nav-arrow" *ngIf="!collapsed" [class.rotated]="item.expanded">
@@ -47,19 +50,23 @@
           <ul class="nav-children" *ngIf="item.children && (item.expanded || collapsed)">
             <ng-container *ngFor="let child of visibleChildren(item)">
               <li>
-                <a [routerLink]="child.route" routerLinkActive="active"
-                   class="nav-item nav-child" [title]="child.label">
+                <a [routerLink]="child.route"
+                   routerLinkActive="active"
+                   class="nav-item nav-child"
+                   [title]="child.label">
                   <i class="bi {{ child.icon }} nav-icon-bi"></i>
                   <span class="nav-label" *ngIf="!collapsed">{{ child.label }}</span>
                 </a>
               </li>
             </ng-container>
           </ul>
+
         </li>
       </ng-container>
     </ul>
   </nav>
 
+  <!-- Footer -->
   <div class="sidebar-footer" *ngIf="!collapsed">
     <div class="user-info">
       <div class="user-avatar">{{ userInitials }}</div>
@@ -69,4 +76,5 @@
       </div>
     </div>
   </div>
+
 </aside>

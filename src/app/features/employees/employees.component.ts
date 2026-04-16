@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -47,7 +47,8 @@ export class EmployeesComponent implements OnInit {
     private deptSvc:  DepartmentService,
     private posSvc:   PositionService,
     private api:      ApiService,
-    public  auth:     AuthService,
+    public  auth:      AuthService,
+    private cdr:      ChangeDetectorRef,
   ) {}
 
   ngOnInit() {
@@ -64,16 +65,22 @@ export class EmployeesComponent implements OnInit {
         this.departments = d.departments;
         this.positions   = d.positions;
         this.loading     = false;
+        this.cdr.detectChanges();
       },
-      error: () => { this.loading = false; }
+      error: () => { this.loading = false; this.cdr.detectChanges(); }
     });
   }
 
   load() {
     this.loading = true;
     this.service.getAll().subscribe({
-      next: (data) => { this.items = data; this.filtered = data; this.loading = false; },
-      error: () => { this.loading = false; }
+      next: (data) => {
+        this.items = data;
+        this.filtered = data;
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => { this.loading = false; this.cdr.detectChanges(); }
     });
   }
 
@@ -88,8 +95,11 @@ export class EmployeesComponent implements OnInit {
   openCreate() {
     this.form = this.emptyForm();
     this.form.companyId = this.auth.currentUser()?.companyId ?? '';
-    this.editing = false; this.editingId = ''; this.errors = {};
+    this.editing = false;
+    this.editingId = '';
+    this.errors = {};
     this.showModal = true;
+    this.cdr.detectChanges();
   }
 
   openEdit(item: Employee) {
@@ -103,9 +113,9 @@ export class EmployeesComponent implements OnInit {
       matricule:         item.matricule          ?? '',
       gender:            item.gender             ?? '',
       birthDate:         item.birthDate?.slice(0, 10) ?? '',
-      phone:             item.phone              ?? '',
-      email:             item.email              ?? '',
-      address:           item.address            ?? '',
+      phone:             item.phone               ?? '',
+      email:             item.email               ?? '',
+      address:           item.address             ?? '',
       city:              item.city               ?? '',
       hireDate:          item.hireDate?.slice(0, 10) ?? '',
       status:            item.status,
@@ -116,8 +126,11 @@ export class EmployeesComponent implements OnInit {
       bankName:          item.bankName           ?? '',
       bankAccountNumber: item.bankAccountNumber  ?? '',
     };
-    this.editing = true; this.editingId = item.id; this.errors = {};
+    this.editing = true;
+    this.editingId = item.id;
+    this.errors = {};
     this.showModal = true;
+    this.cdr.detectChanges();
   }
 
   save() {
@@ -139,8 +152,15 @@ export class EmployeesComponent implements OnInit {
       : this.service.create(payload as CreateEmployeePayload);
 
     obs.subscribe({
-      next: () => { this.showModal = false; this.load(); },
-      error: (e: any) => { this.errors['api'] = e?.error?.error || 'Erreur serveur'; }
+      next: () => {
+        this.showModal = false;
+        this.cdr.detectChanges();
+        this.load();
+      },
+      error: (e: any) => {
+        this.errors['api'] = e?.error?.error || 'Erreur serveur';
+        this.cdr.detectChanges();
+      }
     });
   }
 
@@ -171,7 +191,7 @@ export class EmployeesComponent implements OnInit {
 
   onCompanyChange()    { this.form.departmentId = ''; this.form.positionId = ''; }
   onDepartmentChange() { this.form.positionId = ''; }
-  close()              { this.showModal = false; }
+  close()              { this.showModal = false; this.cdr.detectChanges(); }
   hasError(f: string)  { return !!this.errors[f]; }
 
   private emptyForm(): any {

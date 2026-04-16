@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ContractService, EmployeeService } from '../../core/services/domain.services';
@@ -26,23 +26,13 @@ export class ContractsComponent implements OnInit {
   readonly typeOptions = CONTRACT_TYPE_OPTIONS;
   readonly statusOptions = CONTRACT_STATUS_OPTIONS;
 
-  form: any = {
-    employeeId: '',
-    contractType: 'CDI',
-    status: 'DRAFT',
-    startDate: '',
-    endDate: '',
-    baseSalary: 0,
-    hoursPerMonth: null,
-    workingDaysPerMonth: null,
-    transportAllowance: null,
-    notes: ''
-  };
+  form: any = this.emptyForm();
 
   constructor(
     private service: ContractService,
     private employeeService: EmployeeService,
-    private auth: AuthService
+    private auth: AuthService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -51,14 +41,14 @@ export class ContractsComponent implements OnInit {
   }
 
   loadEmployees() {
-    this.employeeService.getAll().subscribe({ next: (d) => { this.employees = d; }, error: () => {} });
+    this.employeeService.getAll().subscribe({ next: (d) => { this.employees = d; this.cdr.detectChanges(); } });
   }
 
   load() {
     this.loading = true;
     this.service.getAll().subscribe({
-      next: (data) => { this.items = data; this.applySearch(); this.loading = false; },
-      error: () => { this.loading = false; }
+      next: (data) => { this.items = data; this.applySearch(); this.loading = false; this.cdr.detectChanges(); },
+      error: () => { this.loading = false; this.cdr.detectChanges(); }
     });
   }
 
@@ -77,14 +67,14 @@ export class ContractsComponent implements OnInit {
 
   getEmployeeName(id: string): string {
     const e = this.employees.find(e => e.id === id);
-    return e ? `${e.firstName} ${e.lastName}` : id;
+    return e ? `${e.firstName} ${e.lastName}` : 'Chargement...';
   }
 
   emptyForm() {
     return {
-      employeeId: '', contractType: 'CDI', status: 'DRAFT',
-      startDate: '', endDate: '', baseSalary: 0,
-      hoursPerMonth: null, workingDaysPerMonth: null,
+      employeeId: '', contractType: 'CDI', status: 'ACTIVE',
+      startDate: new Date().toISOString().slice(0, 10), endDate: '', baseSalary: null,
+      hoursPerMonth: 191, workingDaysPerMonth: 26,
       transportAllowance: null, notes: ''
     };
   }
@@ -93,6 +83,7 @@ export class ContractsComponent implements OnInit {
     this.form = this.emptyForm();
     this.editing = false; this.editingId = ''; this.error = '';
     this.showModal = true;
+    this.cdr.detectChanges();
   }
 
   openEdit(item: any) {
@@ -110,11 +101,13 @@ export class ContractsComponent implements OnInit {
     };
     this.editing = true; this.editingId = item.id; this.error = '';
     this.showModal = true;
+    this.cdr.detectChanges();
   }
 
   save() {
     if (!this.form.employeeId || !this.form.contractType || !this.form.startDate || !this.form.baseSalary) {
-      this.error = 'Employé, type, date de début et salaire de base sont obligatoires.';
+      this.error = 'Champs obligatoires manquants.';
+      this.cdr.detectChanges();
       return;
     }
     const payload: any = {
@@ -131,12 +124,10 @@ export class ContractsComponent implements OnInit {
     if (this.form.transportAllowance) payload.transportAllowance = +this.form.transportAllowance;
     if (this.form.notes) payload.notes = this.form.notes;
 
-    const obs = this.editing
-      ? this.service.update(this.editingId, payload)
-      : this.service.create(payload);
+    const obs = this.editing ? this.service.update(this.editingId, payload) : this.service.create(payload);
     obs.subscribe({
       next: () => { this.showModal = false; this.load(); },
-      error: (e) => { this.error = e?.error?.error || 'Erreur serveur'; }
+      error: (e) => { this.error = e?.error?.error || 'Erreur serveur'; this.cdr.detectChanges(); }
     });
   }
 
@@ -145,7 +136,7 @@ export class ContractsComponent implements OnInit {
     this.service.delete(id).subscribe(() => this.load());
   }
 
-  close() { this.showModal = false; }
+  close() { this.showModal = false; this.cdr.detectChanges(); }
 
   statusClass(s: string): string {
     const m: any = { ACTIVE: 'badge-success', DRAFT: 'badge-secondary', ENDED: 'badge-danger', SUSPENDED: 'badge-warning', TERMINATED: 'badge-danger' };
@@ -153,7 +144,7 @@ export class ContractsComponent implements OnInit {
   }
 
   typeClass(t: string): string {
-    const m: any = { CDI: 'badge-success', CDD: 'badge-info', STAGE: 'badge-warning', INTERIM: 'badge-purple', FREELANCE: 'badge-secondary', OTHER: 'badge-secondary' };
+    const m: any = { CDI: 'badge-success', CDD: 'badge-info', STAGE: 'badge-warning', INTERIM: 'badge-purple', FREELANCE: 'badge-secondary' };
     return m[t] ?? 'badge-secondary';
   }
 }

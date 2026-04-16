@@ -1,23 +1,56 @@
+/* Hada howa l-masoul 3la l-wast */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
+  width: 100vw;   /* 100% width dyal l-browser */
+  height: 100vh;  /* 100% height dyal l-browser */
+  background: rgba(0, 0, 0, 0.5); /* l-khyal l-khl f l-lor */
+  
+  display: flex;           /* Flexbox bach n-thkmou f l-position */
+  align-items: center;     /* Center verticalement */
+  justify-content: center; /* Center horizontalement */
+  
+  z-index: 9999;           /* Bach dima t-koun l-fo9 */
+  padding: 20px;           /* Bach may-lse9ch f l-jnoub f mobile */
 }
 
+/* L-form (l-box l-bid) */
 .modal {
   background: white;
-  border-radius: 10px;
-  width: 600px;
-  max-height: 90vh;
-  overflow-y: auto;
-  z-index: 1001;
-  display: block !important;
-  opacity: 1 !important;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 650px;       /* l-3ord max dyal l-form */
+  max-height: 90vh;       /* Bach ila kan twil t-ban scrollbar */
+  overflow-y: auto;       /* Scroll ila kan l-form fih bzaf d les champs */
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+  display: block !important; /* Bach n-ghlbou 3la bootstrap display: none */
+  position: relative;
+  animation: fadeIn 0.3s ease-out; /* Animation khfifa bach y-ban pro */
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Style dyal l-Header w Body bach y-ji nqi */
+.modal-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #f3f4f6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.modal-footer {
+  padding: 1.25rem;
+  border-top: 1px solid #f3f4f6;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
 }

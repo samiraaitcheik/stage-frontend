@@ -271,10 +271,30 @@
 </div>
 
 <!-- Modal -->
-<div class="modal fade" [class.show]="showModal" [style.display]="showModal ? 'block' : 'none'"
-     tabindex="-1" role="dialog" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+
+
+
+
+
+
+
+
+     
+    
+
+
+
+
+
+
+<!-- MODAL OVERLAY (Centered) -->
+<div *ngIf="showModal" class="modal-overlay">
+
+  <div class="modal-box">
+
     <div class="modal-content border-0 shadow-lg">
+
+      <!-- Header -->
       <div class="modal-header bg-primary text-white">
         <h5 class="modal-title">
           <i class="bi bi-patch-check-fill me-2"></i>
@@ -290,7 +310,7 @@
           <div>{{ errors['api'] }}</div>
         </div>
 
-        <form>
+        <form class="form-bg">
           <!-- Company Selection -->
           <div class="row mb-3">
             <div class="col-12">
@@ -472,19 +492,20 @@
         </form>
       </div>
 
+
+
+
+        <!-- Footer -->
       <div class="modal-footer bg-light">
-        <button type="button" class="btn btn-secondary" (click)="close()">
-          <i class="bi bi-x-circle me-1"></i>
+        <button class="btn btn-secondary" (click)="close()">
           Annuler
         </button>
-        <button type="button" class="btn btn-primary" (click)="save()">
-          <i class="bi bi-check-circle me-1"></i>
+        <button class="btn btn-primary" (click)="save()">
           {{ editing ? 'Enregistrer' : 'Créer' }}
         </button>
       </div>
+
     </div>
+
   </div>
 </div>
-
-<!-- Modal Backdrop -->
-<div class="modal-backdrop fade show" *ngIf="showModal"></div>

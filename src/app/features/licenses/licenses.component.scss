@@ -1,232 +1,54 @@
-// Professional Bootstrap-based styling for Licenses Component
-
-// Custom modal backdrop animation
-.modal-backdrop {
-  z-index: 1040;
+.form-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
 }
 
-// Enhanced table styling
-.table {
-  th {
-    border-top: none;
-    font-weight: 600;
-    font-size: 0.875rem;
-    text-transform: uppercase;
-    letter-spacing: 0.025em;
-  }
-
-  td {
-    vertical-align: middle;
-    border-color: #f1f3f4;
-  }
-
-  tbody tr:hover {
-    background-color: #f8f9fa;
-  }
+.form-card {
+  width: 600px;
+  max-width: 95%;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+  overflow: hidden;
 }
 
-// Stats cards hover effects
-.card {
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-  }
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background: #0d6efd;
+  color: white;
 }
 
-// Enhanced badge styling
-.badge {
-  font-weight: 500;
-  border-radius: 6px;
-  font-size: 0.75rem;
-
-  &.bg-success {
-    background-color: #198754 !important;
-  }
-
-  &.bg-warning {
-    background-color: #ffc107 !important;
-    color: #212529 !important;
-  }
-
-  &.bg-danger {
-    background-color: #dc3545 !important;
-  }
-
-  &.bg-info {
-    background-color: #0dcaf0 !important;
-    color: #212529 !important;
-  }
-
-  &.bg-secondary {
-    background-color: #6c757d !important;
-  }
-
-  &.bg-dark {
-    background-color: #212529 !important;
-  }
+.close-btn {
+  border: none;
+  background: transparent;
+  font-size: 24px;
+  color: white;
+  cursor: pointer;
 }
 
-// Module badges in table
-.badge.bg-light {
-  border: 1px solid #dee2e6;
-  transition: all 0.2s ease;
-
-  &.text-success {
-    border-color: #198754;
-    background-color: rgba(25, 135, 84, 0.1) !important;
-  }
-
-  &.text-primary {
-    border-color: #0d6efd;
-    background-color: rgba(13, 110, 253, 0.1) !important;
-  }
-
-  &.text-warning {
-    border-color: #ffc107;
-    background-color: rgba(255, 193, 7, 0.1) !important;
-  }
-
-  &.text-info {
-    border-color: #0dcaf0;
-    background-color: rgba(13, 202, 240, 0.1) !important;
-  }
-
-  &.text-secondary {
-    border-color: #6c757d;
-    background-color: rgba(108, 117, 125, 0.1) !important;
-  }
+.form-body {
+  padding: 20px;
 }
 
-// Form enhancements
-.form-check-input:checked {
-  background-color: #0d6efd;
-  border-color: #0d6efd;
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 15px;
+}
+.form-bg {
+  background: white ;
+  
 }
 
-.form-check-input:focus {
-  border-color: #0d6efd;
-  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-}
-
-// Button group styling
-.btn-group .btn {
-  border-radius: 0;
-
-  &:first-child {
-    border-top-left-radius: 6px;
-    border-bottom-left-radius: 6px;
-  }
-
-  &:last-child {
-    border-top-right-radius: 6px;
-    border-bottom-right-radius: 6px;
-  }
-
-  &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-}
-
-// Loading spinner enhancement
-.spinner-border {
-  width: 3rem;
-  height: 3rem;
-}
-
-// Empty state icon
-.display-1 {
-  font-size: 4rem;
-  line-height: 1;
-}
-
-// Responsive adjustments
-@media (max-width: 768px) {
-  .container-fluid {
-    padding-left: 15px;
-    padding-right: 15px;
-  }
-
-  .card-header {
-    padding: 1rem 0.75rem;
-
-    h5 {
-      font-size: 1.1rem;
-    }
-  }
-
-  .table-responsive {
-    font-size: 0.875rem;
-  }
-
-  .btn-group {
-    flex-direction: column;
-
-    .btn {
-      border-radius: 6px !important;
-      margin-bottom: 2px;
-    }
-  }
-
-  .modal-dialog {
-    margin: 0.5rem;
-    max-width: calc(100vw - 1rem);
-  }
-}
-
-// Dark mode support (if needed)
-@media (prefers-color-scheme: dark) {
-  .card {
-    background-color: #2d3748;
-    border-color: #4a5568;
-  }
-
-  .table {
-    color: #e2e8f0;
-
-    th {
-      background-color: #2d3748;
-      border-color: #4a5568;
-      color: #a0aec0;
-    }
-
-    td {
-      border-color: #4a5568;
-    }
-
-    tbody tr:hover {
-      background-color: #4a5568;
-    }
-  }
-}
-
-// Animation for modal
-.modal.fade .modal-dialog {
-  transition: transform 0.3s ease-out;
-  transform: translate(0, -50px);
-}
-
-.modal.show .modal-dialog {
-  transform: translate(0, 0);
-}
-
-// Custom scrollbar for table
-.table-responsive::-webkit-scrollbar {
-  height: 8px;
-}
-
-.table-responsive::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-.table-responsive::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 4px;
-}
-
-.table-responsive::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+.modal-body p-4{
+  background: white;
+  padding: 10px , 10px;
 }

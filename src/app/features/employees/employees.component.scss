@@ -2,22 +2,22 @@
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;         // Hada howa li kaye-centeri l-form
+  align-items: center;   // Center vertical
+  justify-content: center; // Center horizontal
+  z-index: 9999;         // Bach dima tji l-fo9
 }
 
 .modal {
+  display: block !important; // Darouri bach t-ban mli yt-clika l-button
+  position: relative;
   background: white;
-  border-radius: 10px;
-  width: 600px;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 800px;
   max-height: 90vh;
   overflow-y: auto;
-  z-index: 1001;
-  display: block !important;
-  opacity: 1 !important;
 }

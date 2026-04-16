@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AttendanceService, EmployeeService } from '../../core/services/domain.services';
@@ -25,20 +25,13 @@ export class AttendanceComponent implements OnInit {
 
   readonly statusOptions = ATTENDANCE_STATUS_OPTIONS;
 
-  form: any = {
-    employeeId: '',
-    date: '',
-    status: 'PRESENT',
-    workedHours: null,
-    overtimeHours: null,
-    lateMinutes: null,
-    notes: ''
-  };
+  form: any = this.emptyForm();
 
   constructor(
     private service: AttendanceService,
     private employeeService: EmployeeService,
-    private auth: AuthService
+    private auth: AuthService,
+    private cdr: ChangeDetectorRef // Bach l-modal t-reagi de suite
   ) {}
 
   ngOnInit() {
@@ -48,7 +41,10 @@ export class AttendanceComponent implements OnInit {
 
   loadEmployees() {
     this.employeeService.getAll().subscribe({
-      next: (data) => { this.employees = data; },
+      next: (data) => { 
+        this.employees = data; 
+        this.cdr.detectChanges();
+      },
       error: () => {}
     });
   }
@@ -56,8 +52,16 @@ export class AttendanceComponent implements OnInit {
   load() {
     this.loading = true;
     this.service.getAll().subscribe({
-      next: (data) => { this.items = data; this.applySearch(); this.loading = false; },
-      error: () => { this.loading = false; }
+      next: (data) => { 
+        this.items = data; 
+        this.applySearch(); 
+        this.loading = false; 
+        this.cdr.detectChanges();
+      },
+      error: () => { 
+        this.loading = false; 
+        this.cdr.detectChanges();
+      }
     });
   }
 
@@ -76,7 +80,7 @@ export class AttendanceComponent implements OnInit {
 
   getEmployeeName(id: string): string {
     const e = this.employees.find(e => e.id === id);
-    return e ? `${e.firstName} ${e.lastName}` : id;
+    return e ? `${e.firstName} ${e.lastName}` : 'Employé inconnu';
   }
 
   emptyForm() {
@@ -93,8 +97,11 @@ export class AttendanceComponent implements OnInit {
 
   openCreate() {
     this.form = this.emptyForm();
-    this.editing = false; this.editingId = ''; this.error = '';
+    this.editing = false; 
+    this.editingId = ''; 
+    this.error = '';
     this.showModal = true;
+    this.cdr.detectChanges(); // Force display
   }
 
   openEdit(item: any) {
@@ -107,21 +114,27 @@ export class AttendanceComponent implements OnInit {
       lateMinutes: item.lateMinutes ?? null,
       notes: item.notes ?? ''
     };
-    this.editing = true; this.editingId = item.id; this.error = '';
+    this.editing = true; 
+    this.editingId = item.id; 
+    this.error = '';
     this.showModal = true;
+    this.cdr.detectChanges(); // Force display
   }
 
   save() {
     if (!this.form.employeeId || !this.form.date || !this.form.status) {
       this.error = 'Employé, date et statut sont obligatoires.';
+      this.cdr.detectChanges();
       return;
     }
+
     const payload: any = {
       companyId: this.auth.currentUser()?.companyId,
       employeeId: this.form.employeeId,
       date: this.form.date,
       status: this.form.status,
     };
+
     if (this.form.workedHours !== null && this.form.workedHours !== '') payload.workedHours = +this.form.workedHours;
     if (this.form.overtimeHours !== null && this.form.overtimeHours !== '') payload.overtimeHours = +this.form.overtimeHours;
     if (this.form.lateMinutes !== null && this.form.lateMinutes !== '') payload.lateMinutes = +this.form.lateMinutes;
@@ -130,9 +143,17 @@ export class AttendanceComponent implements OnInit {
     const obs = this.editing
       ? this.service.update(this.editingId, payload)
       : this.service.create(payload);
+
     obs.subscribe({
-      next: () => { this.showModal = false; this.load(); },
-      error: (e) => { this.error = e?.error?.error || 'Erreur serveur'; }
+      next: () => { 
+        this.showModal = false; 
+        this.load(); 
+        this.cdr.detectChanges();
+      },
+      error: (e) => { 
+        this.error = e?.error?.error || 'Erreur serveur'; 
+        this.cdr.detectChanges();
+      }
     });
   }
 
@@ -141,7 +162,10 @@ export class AttendanceComponent implements OnInit {
     this.service.delete(id).subscribe(() => this.load());
   }
 
-  close() { this.showModal = false; }
+  close() { 
+    this.showModal = false; 
+    this.cdr.detectChanges();
+  }
 
   statusLabel(s: string): string {
     const map: any = {

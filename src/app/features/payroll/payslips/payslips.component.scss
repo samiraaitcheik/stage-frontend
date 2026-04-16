@@ -1,23 +1,70 @@
+/* L-overlay kiy-ched l-ecran kamla w kiy-centrer dakchi li dakhlo */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5); /* l-lon dyal l-lor */
+  
+  display: flex !important;   /* Force flexbox */
+  align-items: center;        /* Centrer verticalement */
+  justify-content: center;     /* Centrer horizontalement */
+  
+  z-index: 9999;              /* Ykoun dima l-fo9 */
 }
 
+/* L-boite dyal l-form */
 .modal {
   background: white;
-  border-radius: 10px;
-  width: 600px;
-  max-height: 90vh;
-  overflow-y: auto;
-  z-index: 1001;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 700px;           /* 3ord l-form */
+  max-height: 90vh;           /* May-foutch l-ecran f l-tool */
+  overflow-y: auto;           /* Scroll ila kan twil */
+  
+  margin: 0 !important;       /* N-7iyedo ay margin dyal bootstrap */
   display: block !important;
   opacity: 1 !important;
+  position: relative;
+  
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+  animation: modalScaleIn 0.3s ease-out; /* Animation khfifa */
+}
+
+@keyframes modalScaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Style dakhili bach y-ji nqi */
+.modal-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #f3f4f6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-body {
+  padding: 1.5rem 2rem;
+}
+
+.modal-footer {
+  padding: 1.25rem 2rem;
+  border-top: 1px solid #f3f4f6;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* Grid system dyalk */
+.form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 1rem; }
+.form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 1rem; }
+.section-divider { 
+  margin: 1.5rem 0 1rem; 
+  font-weight: 700; 
+  color: var(--accent); 
+  border-bottom: 1px solid #eee; 
+  padding-bottom: 5px; 
 }

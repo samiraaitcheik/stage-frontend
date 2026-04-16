@@ -72,9 +72,8 @@
   </div>
 </div>
 
-<!-- Modal -->
 <div class="modal-overlay" *ngIf="showModal" (click)="close()">
-  <div class="modal modal-lg" (click)="$event.stopPropagation()">
+  <div class="modal modal-lg show" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h3>
         <i class="bi bi-person-badge"></i>
@@ -90,10 +89,8 @@
         <i class="bi bi-exclamation-triangle-fill"></i> {{ errors['api'] }}
       </div>
 
-      <!-- Section: Identification -->
       <div class="form-section-title"><i class="bi bi-building"></i> Entreprise & Organisation</div>
       <div class="form-row">
-        <!-- ✅ Dropdown entreprise -->
         <div class="form-group" [class.has-error]="hasError('companyId')">
           <label><i class="bi bi-building"></i> Entreprise <span class="required">*</span></label>
           <ng-container *ngIf="auth.isSuperAdmin(); else readonlyCompany">
@@ -108,7 +105,6 @@
           <span class="field-error" *ngIf="hasError('companyId')">{{ errors['companyId'] }}</span>
         </div>
 
-        <!-- ✅ Dropdown département filtré par company -->
         <div class="form-group">
           <label><i class="bi bi-diagram-3"></i> Département</label>
           <select [(ngModel)]="form.departmentId" (change)="onDepartmentChange()">
@@ -119,7 +115,6 @@
       </div>
 
       <div class="form-row">
-        <!-- ✅ Dropdown poste filtré par département -->
         <div class="form-group">
           <label><i class="bi bi-briefcase"></i> Poste</label>
           <select [(ngModel)]="form.positionId">
@@ -133,7 +128,6 @@
         </div>
       </div>
 
-      <!-- Section: Identité -->
       <div class="form-section-title"><i class="bi bi-person-vcard"></i> Identité</div>
       <div class="form-row">
         <div class="form-group" [class.has-error]="hasError('firstName')">
@@ -185,7 +179,6 @@
         </div>
       </div>
 
-      <!-- Section: Contact -->
       <div class="form-section-title"><i class="bi bi-telephone"></i> Contact</div>
       <div class="form-row">
         <div class="form-group">
@@ -209,7 +202,6 @@
         </div>
       </div>
 
-      <!-- Section: Salaire & Paiement -->
       <div class="form-section-title"><i class="bi bi-cash-stack"></i> Salaire & Paiement</div>
       <div class="form-row">
         <div class="form-group">
@@ -233,7 +225,6 @@
         </div>
       </div>
 
-      <!-- Statut -->
       <div class="form-group">
         <label><i class="bi bi-toggle-on"></i> Statut</label>
         <select [(ngModel)]="form.status">
@@ -244,10 +235,10 @@
 
     <div class="modal-footer">
       <button class="btn btn-secondary" (click)="close()">
-        <i class="bi bi-x-circle"></i> Annuler
+        Annuler
       </button>
       <button class="btn btn-primary" (click)="save()">
-        <i class="bi bi-check-circle"></i> {{ editing ? 'Enregistrer' : 'Créer' }}
+        {{ editing ? 'Enregistrer' : 'Créer' }}
       </button>
     </div>
   </div>

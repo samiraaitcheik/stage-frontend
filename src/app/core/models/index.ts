@@ -76,6 +76,21 @@ export interface CreateCompanyPayload {
 }
 export type UpdateCompanyPayload = Partial<CreateCompanyPayload>;
 
+export interface CreateCompanyWithLicenseAndUsersPayload {
+  company: CreateCompanyPayload;
+  license: Omit<CreateLicensePayload, 'companyId'>;
+  users: Array<{
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+    phone?: string;
+    role?: string;
+    status?: string;
+    permissions?: string[];
+  }>;
+}
+
 export interface User {
   id: string;
   companyId: string;

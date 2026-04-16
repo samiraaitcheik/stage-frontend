@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { UserService, CompanyService } from '../../core/services/domain.services';
 import { AuthService } from '../../core/services/auth.service';
 import { Company } from '../../core/models';
@@ -49,6 +50,7 @@ export class UsersComponent implements OnInit {
   search = '';
   error = '';
   showPassword = false;
+  queryCompanyId = '';
   toast = '';
   toastTimer: any;
 
@@ -67,7 +69,8 @@ export class UsersComponent implements OnInit {
   constructor(
     private service: UserService,
     private companyService: CompanyService,
-    public auth: AuthService
+    public auth: AuthService,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit() {
@@ -75,6 +78,13 @@ export class UsersComponent implements OnInit {
     if (this.auth.isSuperAdmin()) {
       this.companyService.getAll().subscribe({ next: (data) => this.companies = data });
     }
+    this.route.queryParamMap.subscribe(params => {
+      const companyId = params.get('companyId');
+      if (companyId) {
+        this.queryCompanyId = companyId;
+        this.openCreate();
+      }
+    });
   }
 
   emptyForm() {
@@ -122,6 +132,9 @@ export class UsersComponent implements OnInit {
 
   openCreate() {
     this.form = this.emptyForm();
+    if (this.queryCompanyId && this.auth.isSuperAdmin()) {
+      this.form.companyId = this.queryCompanyId;
+    }
     if (!this.auth.isSuperAdmin()) {
       this.form.companyId = this.auth.currentUser()?.companyId ?? '';
     }

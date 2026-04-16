@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { LicenseService, CompanyService } from '../../core/services/domain.services';
+import { ActivatedRoute } from '@angular/router';
+import { LicenseService, CompanyService, SuperAdminService } from '../../core/services/domain.services';
 import { AuthService } from '../../core/services/auth.service';
 import {
   License, Company,
@@ -30,18 +31,19 @@ function validateRequired(form: any, fields: string[]): FormErrors {
   styleUrls: ['./licenses.component.scss']
 })
 export class LicensesComponent implements OnInit {
-  items: License[]   = [];
+  items: License[] = [];
   filtered: License[] = [];
-  companies: Company[] = [];   // ✅ liste des entreprises pour le dropdown
-  loading    = true;
-  showModal  = false;
-  editing    = false;
-  editingId  = '';
-  search     = '';
+  companies: Company[] = [];
+  loading = true;
+  showModal = false;
+  editing = false;
+  editingId = '';
+  search = '';
   errors: FormErrors = {};
+  queryCompanyId = '';
 
-  readonly planOptions    = LICENSE_PLAN_OPTIONS;
-  readonly statusOptions  = LICENSE_STATUS_OPTIONS;
+  readonly planOptions = LICENSE_PLAN_OPTIONS;
+  readonly statusOptions = LICENSE_STATUS_OPTIONS;
   readonly billingOptions = BILLING_CYCLE_OPTIONS;
 
   form: any = this.emptyForm();
@@ -49,15 +51,23 @@ export class LicensesComponent implements OnInit {
   constructor(
     private service: LicenseService,
     private companyService: CompanyService,
-    private auth: AuthService,
+    private superAdminService: SuperAdminService,
+    public auth: AuthService,
+    private route: ActivatedRoute,
   ) {}
 
   ngOnInit() {
     this.load();
     this.loadCompanies();
+    this.route.queryParamMap.subscribe(params => {
+      const companyId = params.get('companyId');
+      if (companyId) {
+        this.queryCompanyId = companyId;
+        this.openCreate();
+      }
+    });
   }
 
-  // ✅ charge les entreprises pour le select
   loadCompanies() {
     this.companyService.getAll().subscribe({
       next: (data) => { this.companies = data; },
@@ -65,7 +75,6 @@ export class LicensesComponent implements OnInit {
     });
   }
 
-  // ✅ helper — retourne le nom d'une entreprise par son id
   companyName(id: string): string {
     return this.companies.find(c => c.id === id)?.name ?? id;
   }
@@ -86,21 +95,18 @@ export class LicensesComponent implements OnInit {
     );
   }
 
-  get isSuperAdmin(): boolean {
-    return this.auth.isSuperAdmin();
-  }
-
-  get currentCompanyId(): string {
-    return this.auth.currentUser()?.companyId ?? '';
-  }
-
+  get isSuperAdmin(): boolean { return this.auth.isSuperAdmin(); }
+  get currentCompanyId(): string { return this.auth.currentUser()?.companyId ?? ''; }
   get currentCompanyName(): string {
-    const companyId = this.currentCompanyId;
-    return this.companies.find(c => c.id === companyId)?.name ?? 'Entreprise assignée automatiquement';
+    const id = this.currentCompanyId;
+    return this.companies.find(c => c.id === id)?.name ?? 'Entreprise assignée automatiquement';
   }
 
   openCreate() {
     this.form = this.emptyForm();
+    if (this.queryCompanyId && this.isSuperAdmin) {
+      this.form.companyId = this.queryCompanyId;
+    }
     if (!this.isSuperAdmin) {
       this.form.companyId = this.currentCompanyId;
     }
@@ -115,10 +121,10 @@ export class LicensesComponent implements OnInit {
       status:          item.status,
       billingCycle:    item.billingCycle,
       startsAt:        item.startsAt?.slice(0, 10) ?? '',
-      endsAt:          item.endsAt?.slice(0, 10) ?? '',
-      maxUsers:        item.maxUsers ?? null,
-      maxEmployees:    item.maxEmployees ?? null,
-      maxStorageMb:    item.maxStorageMb ?? null,
+      endsAt:          item.endsAt?.slice(0, 10)   ?? '',
+      maxUsers:        item.maxUsers        ?? null,
+      maxEmployees:    item.maxEmployees    ?? null,
+      maxStorageMb:    item.maxStorageMb    ?? null,
       payrollEnabled:  item.payrollEnabled,
       rhEnabled:       item.rhEnabled,
       cnssEnabled:     item.cnssEnabled,
@@ -138,55 +144,47 @@ export class LicensesComponent implements OnInit {
     this.errors = validateRequired(this.form, ['companyId', 'planCode', 'startsAt']);
     if (Object.keys(this.errors).length) return;
 
-    const obs = this.editing
-      ? this.service.update(this.editingId, this.form)
-      : this.service.create(this.form);
+    const next = () => { this.showModal = false; this.load(); };
+    const error = (e: any) => { this.errors['api'] = e?.error?.error || 'Erreur serveur'; };
 
-    obs.subscribe({
-      next: () => { this.showModal = false; this.load(); },
-      error: (e: any) => { this.errors['api'] = e?.error?.error || 'Erreur serveur'; }
-    });
+    if (this.editing) {
+      this.service.update(this.editingId, this.form).subscribe({ next, error });
+    } else {
+      this.superAdminService.createOrUpdateLicense(this.form).subscribe({ next, error });
+    }
   }
 
   delete(id: string) {
     if (!confirm('Supprimer cette licence ?')) return;
-    this.service.delete(id).subscribe(() => this.load());
+    this.service.delete(id).subscribe({ next: () => this.load() });
   }
 
-  close()              { this.showModal = false; }
-  hasError(f: string)  { return !!this.errors[f]; }
+  close() { this.showModal = false; }
+  hasError(f: string) { return !!this.errors[f]; }
 
-  // Helper methods for styling
   getPlanBadgeClass(planCode: string): string {
-    const classes: Record<string, string> = {
-      'BASIC': 'bg-secondary',
-      'PRO': 'bg-info',
-      'BUSINESS': 'bg-warning text-dark',
-      'ENTERPRISE': 'bg-danger'
+    const map: Record<string, string> = {
+      'BASIC': 'bg-secondary', 'PRO': 'bg-info',
+      'BUSINESS': 'bg-warning text-dark', 'ENTERPRISE': 'bg-danger'
     };
-    return classes[planCode] || 'bg-secondary';
+    return map[planCode] || 'bg-secondary';
   }
 
   getStatusBadgeClass(status: string): string {
-    const classes: Record<string, string> = {
-      'TRIAL': 'bg-warning text-dark',
-      'ACTIVE': 'bg-success',
-      'EXPIRED': 'bg-danger',
-      'SUSPENDED': 'bg-secondary',
-      'CANCELLED': 'bg-dark'
+    const map: Record<string, string> = {
+      'TRIAL': 'bg-warning text-dark', 'ACTIVE': 'bg-success',
+      'EXPIRED': 'bg-danger', 'SUSPENDED': 'bg-secondary', 'CANCELLED': 'bg-dark'
     };
-    return classes[status] || 'bg-secondary';
+    return map[status] || 'bg-secondary';
   }
 
   getStatusIcon(status: string): string {
-    const icons: Record<string, string> = {
-      'TRIAL': 'bi-clock',
-      'ACTIVE': 'bi-check-circle-fill',
-      'EXPIRED': 'bi-x-circle-fill',
-      'SUSPENDED': 'bi-pause-circle-fill',
+    const map: Record<string, string> = {
+      'TRIAL': 'bi-clock', 'ACTIVE': 'bi-check-circle-fill',
+      'EXPIRED': 'bi-x-circle-fill', 'SUSPENDED': 'bi-pause-circle-fill',
       'CANCELLED': 'bi-x-octagon-fill'
     };
-    return icons[status] || 'bi-question-circle';
+    return map[status] || 'bi-question-circle';
   }
 
   private emptyForm(): any {

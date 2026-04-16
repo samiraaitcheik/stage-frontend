@@ -3,7 +3,7 @@ import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
 export const authGuard: CanActivateFn = () => {
-  const auth = inject(AuthService);
+  const auth   = inject(AuthService);
   const router = inject(Router);
 
   if (auth.isLoggedIn()) return true;
@@ -13,39 +13,32 @@ export const authGuard: CanActivateFn = () => {
 };
 
 export const adminGuard: CanActivateFn = () => {
-  const auth = inject(AuthService);
+  const auth   = inject(AuthService);
   const router = inject(Router);
 
-  if (!auth.isLoggedIn()) {
-    router.navigate(['/login']);
-    return false;
-  }
-
-  if (auth.isAdmin()) return true;
+  if (!auth.isLoggedIn()) { router.navigate(['/login']); return false; }
+  if (auth.isAdmin())     return true;
 
   router.navigate(['/unauthorized']);
   return false;
 };
 
-
 export const permissionGuard = (permission: string): CanActivateFn => () => {
-  const auth = inject(AuthService);
+  const auth   = inject(AuthService);
   const router = inject(Router);
 
-  if (!auth.isLoggedIn()) {
-    router.navigate(['/login']);
-    return false;
-  }
+  if (!auth.isLoggedIn()) { router.navigate(['/login']); return false; }
 
-  if (permission === 'licenses' && !auth.isSuperAdmin()) {
+  // Super admin a accès partout
+  if (auth.isSuperAdmin()) return true;
+
+  // La page "licences" est réservée au super admin
+  if (permission === 'licenses') {
     router.navigate(['/unauthorized']);
     return false;
   }
 
-  if (auth.isSuperAdmin()) return true;
-
-  const permissions = auth.getPermissions() || [];
-
+  const permissions = auth.getPermissions() ?? [];
   if (permissions.includes(permission)) return true;
 
   router.navigate(['/unauthorized']);

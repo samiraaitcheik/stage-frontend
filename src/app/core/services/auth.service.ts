@@ -40,33 +40,40 @@ const USER_KEY  = 'hrm_user';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private _user = signal<AuthResponse['user'] | null>(this.loadUser());
+  private _user  = signal<AuthResponse['user'] | null>(this.loadUser());
   private _token = signal<string | null>(this.loadToken());
 
-  // Public signals
+  // ── Signals publics ──────────────────────────────────────────────────────
   readonly currentUser = this._user.asReadonly();
   readonly token       = this._token.asReadonly();
   readonly isLoggedIn  = computed(() => !!this._token() && !this.isExpired());
-  readonly isAdmin     = computed(() => {
+
+  readonly isAdmin = computed(() => {
     const user = this._user();
     if (!user) return false;
-    const role = user.role;
-    return role === 'ADMIN' || role === 'SUPER_ADMIN' || (user.permissions ?? []).includes('all');
+    return user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.isSuperAdmin === true;
   });
 
+  /**
+   * CORRIGÉ: isSuperAdmin est un computed signal Angular.
+   * En Angular 16+, les computed signals s'appellent comme des fonctions : this.auth.isSuperAdmin()
+   * C'est déjà correct dans tout le code existant.
+   */
   readonly isSuperAdmin = computed(() => {
     const user = this._user();
-    return user?.isSuperAdmin === true || user?.role === 'SUPER_ADMIN' || (user?.permissions ?? []).includes('all');
+    return user?.isSuperAdmin === true || user?.role === 'SUPER_ADMIN';
   });
 
-  readonly userRole    = computed(() => this._user()?.role ?? null);
+  readonly userRole = computed(() => this._user()?.role ?? null);
+
+  // ── Méthodes utilitaires ─────────────────────────────────────────────────
 
   hasPermission(permission: string): boolean {
     const user = this._user();
     if (!user) return false;
-    if (user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' || user.isSuperAdmin || (user.permissions ?? []).includes('all')) {
-      return true;
-    }
+    // Super admin et Admin ont toutes les permissions
+    if (user.role === 'SUPER_ADMIN' || user.isSuperAdmin) return true;
+    if (user.role === 'ADMIN') return true;
     return (user.permissions ?? []).includes(permission);
   }
 
@@ -99,7 +106,6 @@ export class AuthService {
     return this._token();
   }
 
-  /** Decode JWT payload (sans vérification signature — faite côté serveur) */
   decodeToken(): JwtPayload | null {
     const token = this._token();
     if (!token) return null;

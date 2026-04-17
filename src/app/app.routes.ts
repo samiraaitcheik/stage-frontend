@@ -58,26 +58,6 @@ export const routes: Routes = [
         loadComponent: () => import('./features/licenses/licenses.component').then(m => m.LicensesComponent)
       },
       {
-        path: 'payroll/periods',
-        canActivate: [permissionGuard('payroll')],
-        loadComponent: () => import('./features/payroll/periods/periods.component').then(m => m.PeriodsComponent)
-      },
-      {
-        path: 'payroll/runs',
-        canActivate: [permissionGuard('payroll')],
-        loadComponent: () => import('./features/payroll/runs/runs.component').then(m => m.RunsComponent)
-      },
-      {
-        path: 'payroll/items',
-        canActivate: [permissionGuard('payroll')],
-        loadComponent: () => import('./features/payroll/items/items.component').then(m => m.ItemsComponent)
-      },
-      {
-        path: 'payroll/payslips',
-        canActivate: [permissionGuard('payroll')],
-        loadComponent: () => import('./features/payroll/payslips/payslips.component').then(m => m.PayslipsComponent)
-      },
-      {
         path: 'variable-items',
         canActivate: [permissionGuard('contracts')],
         loadComponent: () => import('./features/variable-items/variable-items.component').then(m => m.VariableItemsComponent)

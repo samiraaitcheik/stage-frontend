@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { VariableItemService, EmployeeService, PayrollPeriodService } from '../../core/services/domain.services';
+import { VariableItemService, EmployeeService } from '../../core/services/domain.services';
 import { AuthService } from '../../core/services/auth.service';
 import { VARIABLE_ITEM_TYPE_OPTIONS, VARIABLE_VALUE_TYPE_OPTIONS, VARIABLE_ITEM_STATUS_OPTIONS } from '../../core/models';
 
@@ -43,14 +43,12 @@ export class VariableItemsComponent implements OnInit {
   constructor(
     private service: VariableItemService,
     private employeeService: EmployeeService,
-    private periodService: PayrollPeriodService,
     private auth: AuthService
   ) {}
 
   ngOnInit() {
     this.load();
     this.employeeService.getAll().subscribe({ next: (d) => { this.employees = d; }, error: () => {} });
-    this.periodService.getAll().subscribe({ next: (d) => { this.periods = d; }, error: () => {} });
   }
 
   load() {

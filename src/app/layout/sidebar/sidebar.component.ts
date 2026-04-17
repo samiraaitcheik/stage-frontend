@@ -45,15 +45,7 @@ export class SidebarComponent {
         { label: 'Éléments variables', icon: 'bi-sliders',                   route: '/variable-items', permission: 'contracts' },
       ]
     },
-    {
-      label: 'Paie', icon: 'bi-cash-stack', expanded: false,
-      children: [
-        { label: 'Périodes',       icon: 'bi-calendar3',                    route: '/payroll/periods',  permission: 'payroll' },
-        { label: 'Exécutions',     icon: 'bi-play-circle-fill',             route: '/payroll/runs',     permission: 'payroll' },
-        { label: 'Lignes de paie', icon: 'bi-list-columns',                 route: '/payroll/items',    permission: 'payroll' },
-        { label: 'Bulletins',      icon: 'bi-file-earmark-richtext-fill',   route: '/payroll/payslips', permission: 'payroll' },
-      ]
-    },
+   
     { label: 'Utilisateurs', icon: 'bi-person-gear-fill', route: '/users', permission: 'users' },
   ];
 

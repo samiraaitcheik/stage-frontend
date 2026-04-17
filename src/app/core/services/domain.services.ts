@@ -108,51 +108,6 @@ export class LicenseService {
 }
 
 @Injectable({ providedIn: 'root' })
-export class PayrollPeriodService {
-  constructor(private api: ApiService) {}
-  getAll(): Observable<PayrollPeriod[]>                                { return this.api.get('/payroll-periods'); }
-  getById(id: string): Observable<PayrollPeriod>                      { return this.api.get(`/payroll-periods/${id}`); }
-  create(data: Partial<PayrollPeriod>): Observable<PayrollPeriod>     { return this.api.post('/payroll-periods', data); }
-  update(id: string, data: Partial<PayrollPeriod>): Observable<PayrollPeriod> { return this.api.put(`/payroll-periods/${id}`, data); }
-  delete(id: string): Observable<any>                                  { return this.api.delete(`/payroll-periods/${id}`); }
-}
-
-@Injectable({ providedIn: 'root' })
-export class PayrollRunService {
-  constructor(private api: ApiService) {}
-  getAll(): Observable<PayrollRun[]>                               { return this.api.get('/payroll-runs'); }
-  getById(id: string): Observable<PayrollRun>                     { return this.api.get(`/payroll-runs/${id}`); }
-  getByPeriod(periodId: string): Observable<PayrollRun[]>         { return this.api.get(`/payroll-runs/period/${periodId}`); }
-  create(data: Partial<PayrollRun>): Observable<PayrollRun>       { return this.api.post('/payroll-runs', data); }
-  update(id: string, data: Partial<PayrollRun>): Observable<PayrollRun> { return this.api.put(`/payroll-runs/${id}`, data); }
-  delete(id: string): Observable<any>                             { return this.api.delete(`/payroll-runs/${id}`); }
-}
-
-@Injectable({ providedIn: 'root' })
-export class PayrollItemService {
-  constructor(private api: ApiService) {}
-  getAll(): Observable<PayrollItem[]>                                  { return this.api.get('/payroll-items'); }
-  getById(id: string): Observable<PayrollItem>                        { return this.api.get(`/payroll-items/${id}`); }
-  getByRun(runId: string): Observable<PayrollItem[]>                  { return this.api.get(`/payroll-items/run/${runId}`); }
-  getByEmployee(employeeId: string): Observable<PayrollItem[]>        { return this.api.get(`/payroll-items/employee/${employeeId}`); }
-  create(data: Partial<PayrollItem>): Observable<PayrollItem>         { return this.api.post('/payroll-items', data); }
-  update(id: string, data: Partial<PayrollItem>): Observable<PayrollItem> { return this.api.put(`/payroll-items/${id}`, data); }
-  delete(id: string): Observable<any>                                 { return this.api.delete(`/payroll-items/${id}`); }
-}
-
-@Injectable({ providedIn: 'root' })
-export class PayslipService {
-  constructor(private api: ApiService) {}
-  getAll(): Observable<Payslip[]>                                  { return this.api.get('/payslips'); }
-  getById(id: string): Observable<Payslip>                        { return this.api.get(`/payslips/${id}`); }
-  getByEmployee(employeeId: string): Observable<Payslip[]>        { return this.api.get(`/payslips/employee/${employeeId}`); }
-  getByPeriod(periodId: string): Observable<Payslip[]>            { return this.api.get(`/payslips/period/${periodId}`); }
-  create(data: Partial<Payslip>): Observable<Payslip>             { return this.api.post('/payslips', data); }
-  update(id: string, data: Partial<Payslip>): Observable<Payslip> { return this.api.put(`/payslips/${id}`, data); }
-  delete(id: string): Observable<any>                             { return this.api.delete(`/payslips/${id}`); }
-}
-
-@Injectable({ providedIn: 'root' })
 export class VariableItemService {
   constructor(private api: ApiService) {}
   getAll(): Observable<VariableItem[]>                                   { return this.api.get('/variable-items'); }

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { EmployeeService, DepartmentService, AttendanceService, PayrollPeriodService, ContractService } from '../../core/services/domain.services';
+import { EmployeeService, DepartmentService, AttendanceService, ContractService } from '../../core/services/domain.services';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 
@@ -22,7 +22,6 @@ export class DashboardComponent implements OnInit {
     private employeeService: EmployeeService,
     private departmentService: DepartmentService,
     private attendanceService: AttendanceService,
-    private periodService: PayrollPeriodService,
     private contractService: ContractService,
     private api: ApiService,
     public auth: AuthService,
@@ -38,7 +37,6 @@ export class DashboardComponent implements OnInit {
       departments: this.departmentService.getAll().pipe(catchError(() => of([]))),
       companies:   companies$,
       attendances: this.attendanceService.getAll().pipe(catchError(() => of([]))),
-      periods:     this.periodService.getAll().pipe(catchError(() => of([]))),
       contracts:   this.contractService.getAll().pipe(catchError(() => of([]))),
     }).subscribe({
       next: (data) => {
@@ -46,7 +44,6 @@ export class DashboardComponent implements OnInit {
         this.stats.departments = data.departments.length;
         this.stats.companies   = data.companies.length;
         this.stats.attendances = data.attendances.length;
-        this.stats.periods     = data.periods.length;
         this.stats.contracts   = data.contracts.length;
         this.loading = false;
       },

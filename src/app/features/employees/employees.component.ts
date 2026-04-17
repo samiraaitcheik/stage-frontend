@@ -2,7 +2,7 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
-  EmployeeService, DepartmentService,
+  CompanyService, EmployeeService, DepartmentService,
   PositionService
 } from '../../core/services/domain.services';
 import { ApiService } from '../../core/services/api.service';
@@ -35,6 +35,7 @@ export class EmployeesComponent implements OnInit {
   editing   = false;
   editingId = '';
   search    = '';
+  companyFilterId = '';
   errors: FormErrors = {};
 
   readonly statusOptions = EMPLOYEE_STATUS_OPTIONS;
@@ -46,6 +47,7 @@ export class EmployeesComponent implements OnInit {
     private service:  EmployeeService,
     private deptSvc:  DepartmentService,
     private posSvc:   PositionService,
+    private companyService: CompanyService,
     private api:      ApiService,
     public  auth:      AuthService,
     private cdr:      ChangeDetectorRef,
@@ -54,7 +56,7 @@ export class EmployeesComponent implements OnInit {
   ngOnInit() {
     forkJoin({
       employees:   this.service.getAll().pipe(catchError(() => of([]))),
-      companies:   this.api.get<Company[]>('/companies/mine').pipe(catchError(() => of([]))),
+      companies:   this.companyService.getAll().pipe(catchError(() => of([]))),
       departments: this.deptSvc.getAll().pipe(catchError(() => of([]))),
       positions:   this.posSvc.getAll().pipe(catchError(() => of([]))),
     }).subscribe({
@@ -76,7 +78,7 @@ export class EmployeesComponent implements OnInit {
     this.service.getAll().subscribe({
       next: (data) => {
         this.items = data;
-        this.filtered = data;
+        this.applyFilters();
         this.loading = false;
         this.cdr.detectChanges();
       },
@@ -85,11 +87,17 @@ export class EmployeesComponent implements OnInit {
   }
 
   onSearch() {
+    this.applyFilters();
+  }
+
+  applyFilters() {
     const q = this.search.toLowerCase();
-    this.filtered = this.items.filter(i =>
-      `${i.firstName} ${i.lastName} ${i.email ?? ''} ${i.cin ?? ''} ${i.matricule ?? ''}`
-        .toLowerCase().includes(q)
-    );
+    this.filtered = this.items.filter(i => {
+      const matchesSearch = `${i.firstName} ${i.lastName} ${i.email ?? ''} ${i.cin ?? ''} ${i.matricule ?? ''}`
+        .toLowerCase().includes(q);
+      const matchesCompany = this.companyFilterId ? i.companyId === this.companyFilterId : true;
+      return matchesSearch && matchesCompany;
+    });
   }
 
   openCreate() {
@@ -188,6 +196,10 @@ export class EmployeesComponent implements OnInit {
   companyName(id: string)              { return this.companies.find(c => c.id === id)?.name ?? '—'; }
   departmentName(id?: string | null)   { return id ? (this.departments.find(d => d.id === id)?.name ?? '—') : '—'; }
   positionName(id?: string | null)     { return id ? (this.positions.find(p => p.id === id)?.name ?? '—') : '—'; }
+
+  get isSuperAdmin(): boolean {
+    return this.auth.isSuperAdmin();
+  }
 
   onCompanyChange()    { this.form.departmentId = ''; this.form.positionId = ''; }
   onDepartmentChange() { this.form.positionId = ''; }

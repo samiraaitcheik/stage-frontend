@@ -39,6 +39,7 @@ export class LicensesComponent implements OnInit {
   editing = false;
   editingId = '';
   search = '';
+  companyFilterId = '';
   errors: FormErrors = {};
   queryCompanyId = '';
 
@@ -82,17 +83,23 @@ export class LicensesComponent implements OnInit {
   load() {
     this.loading = true;
     this.service.getAll().subscribe({
-      next: (data) => { this.items = data; this.filtered = data; this.loading = false; },
+      next: (data) => { this.items = data; this.applyFilters(); this.loading = false; },
       error: () => { this.loading = false; }
     });
   }
 
   onSearch() {
+    this.applyFilters();
+  }
+
+  applyFilters() {
     const q = this.search.toLowerCase();
-    this.filtered = this.items.filter(i =>
-      `${this.companyName(i.companyId)} ${i.planCode} ${i.status} ${i.billingCycle}`
-        .toLowerCase().includes(q)
-    );
+    this.filtered = this.items.filter(i => {
+      const matchesSearch = `${this.companyName(i.companyId)} ${i.planCode} ${i.status} ${i.billingCycle}`
+        .toLowerCase().includes(q);
+      const matchesCompany = this.companyFilterId ? i.companyId === this.companyFilterId : true;
+      return matchesSearch && matchesCompany;
+    });
   }
 
   get isSuperAdmin(): boolean { return this.auth.isSuperAdmin(); }

@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { CompanyService, SuperAdminService } from '../../core/services/domain.services';
+import { CompanyService, LicenseService, UserService, SuperAdminService } from '../../core/services/domain.services';
 import { AuthService } from '../../core/services/auth.service';
 import {
   Company, CreateCompanyPayload, UpdateCompanyPayload,
@@ -26,13 +26,45 @@ export class CompaniesComponent implements OnInit {
   editing = false;
   editingId = '';
   search = '';
+  companyFilterId = '';
   errors: FormErrors = {};
-  createMode: 'simple' | 'combined' = 'simple';
+  createMode: 'simple' | 'combined' = 'combined';
+
+  selectedCompany?: Company;
+  selectedLicense: any = null;
+  selectedCompanyUsers: any[] = [];
+  showDetailsModal = false;
+  activeDetailsTab: 'company' | 'license' | 'users' = 'company';
+  detailEditSection: 'company' | 'license' | 'users' = 'company';
 
   readonly statusOptions = COMPANY_STATUS_OPTIONS;
   readonly planOptions = LICENSE_PLAN_OPTIONS;
   readonly licenseStatusOptions = LICENSE_STATUS_OPTIONS;
   readonly billingOptions = BILLING_CYCLE_OPTIONS;
+
+  readonly USER_ROLES = ['ADMIN', 'HR_MANAGER', 'PAYROLL_MANAGER', 'EMPLOYEE', 'VIEWER'];
+  readonly PERMISSIONS = [
+    { key: 'dashboard', label: 'Tableau de bord' },
+    { key: 'employees', label: 'Employés' },
+    { key: 'payroll', label: 'Paie' },
+    { key: 'organisation', label: 'Organisation' },
+    { key: 'attendance', label: 'Présences' },
+    { key: 'contracts', label: 'Contrats' },
+    { key: 'reports', label: 'Rapports CNSS' },
+    { key: 'licenses', label: 'Licences' },
+    { key: 'users', label: 'Utilisateurs' },
+  ];
+
+  readonly ROLE_PRESETS: Record<string, string[]> = {
+    ADMIN: [
+      'dashboard', 'employees', 'organisation', 'attendance',
+      'contracts', 'payroll', 'reports', 'licenses', 'users',
+    ],
+    HR_MANAGER: ['dashboard', 'employees', 'attendance', 'contracts', 'reports', 'users'],
+    PAYROLL_MANAGER: ['dashboard', 'payroll', 'attendance', 'users'],
+    EMPLOYEE: ['dashboard', 'users'],
+    VIEWER: ['dashboard', 'users'],
+  };
 
   // Nouveau: formulaire combiné
   combinedForm: CreateCompanyWithLicenseAndUsersPayload = this.emptyCombinedForm();
@@ -41,6 +73,8 @@ export class CompaniesComponent implements OnInit {
 
   constructor(
     private service: CompanyService,
+    private licenseService: LicenseService,
+    private userService: UserService,
     private superAdminService: SuperAdminService,
     public auth: AuthService,
     private router: Router
@@ -57,15 +91,23 @@ export class CompaniesComponent implements OnInit {
   }
 
   onSearch() {
+    this.applyFilters();
+  }
+
+  applyFilters() {
     const q = this.search.toLowerCase();
-    this.filtered = this.items.filter(i =>
-      `${i.name} ${i.legalName ?? ''} ${i.email ?? ''} ${i.phone ?? ''} ${i.city ?? ''}`.toLowerCase().includes(q)
-    );
+    this.filtered = this.items.filter((item) => {
+      const matchSearch = `${item.name} ${item.legalName ?? ''} ${item.email ?? ''} ${item.phone ?? ''} ${item.city ?? ''}`
+        .toLowerCase().includes(q);
+      const matchCompany = this.companyFilterId ? item.id === this.companyFilterId : true;
+      return matchSearch && matchCompany;
+    });
   }
 
   openCreate() {
-    this.createMode = 'simple';
+    this.createMode = 'combined';
     this.form = this.emptyForm();
+    this.combinedForm = this.emptyCombinedForm();
     this.editing = false; this.editingId = ''; this.errors = {};
     this.showModal = true;
   }
@@ -130,12 +172,74 @@ export class CompaniesComponent implements OnInit {
     this.service.delete(id).subscribe({ next: () => this.load() });
   }
 
-  createLicense(companyId: string) {
-    this.router.navigate(['/licenses'], { queryParams: { companyId } });
+  viewDetails(company: Company) {
+    this.selectedCompany = company;
+    this.activeDetailsTab = 'company';
+    this.detailEditSection = 'company';
+    this.showDetailsModal = true;
+    this.loadCompanyLicense(company.id);
+    this.loadCompanyUsers(company.id);
   }
 
-  createUser(companyId: string) {
-    this.router.navigate(['/users'], { queryParams: { companyId } });
+  loadCompanyLicense(companyId: string) {
+    this.selectedLicense = null;
+    this.licenseService.getByCompany(companyId).subscribe({
+      next: (license) => { this.selectedLicense = license; },
+      error: () => { this.selectedLicense = null; }
+    });
+  }
+
+  loadCompanyUsers(companyId: string) {
+    this.selectedCompanyUsers = [];
+    this.superAdminService.getCompanyUsers(companyId).subscribe({
+      next: (response) => { this.selectedCompanyUsers = response.users; },
+      error: () => { this.selectedCompanyUsers = []; }
+    });
+  }
+
+  saveCompanyDetails() {
+    if (!this.selectedCompany) return;
+    const payload = {
+      name: this.selectedCompany.name,
+      legalName: this.selectedCompany.legalName,
+      taxIdentifier: this.selectedCompany.taxIdentifier,
+      rcNumber: this.selectedCompany.rcNumber,
+      iceNumber: this.selectedCompany.iceNumber,
+      cnssNumber: this.selectedCompany.cnssNumber,
+      email: this.selectedCompany.email,
+      phone: this.selectedCompany.phone,
+      address: this.selectedCompany.address,
+      city: this.selectedCompany.city,
+      country: this.selectedCompany.country,
+      timezone: this.selectedCompany.timezone,
+      currency: this.selectedCompany.currency,
+      status: this.selectedCompany.status,
+    };
+    const next = () => { this.showDetailsModal = false; this.load(); };
+    const error = (e: any) => { this.errors['api'] = e?.error?.error || 'Erreur serveur'; };
+
+    this.service.update(this.selectedCompany.id, payload as UpdateCompanyPayload).subscribe({ next, error });
+  }
+
+  saveLicenseDetails() {
+    if (!this.selectedCompany) return;
+    const payload = {
+      ...(this.selectedLicense || {}),
+      companyId: this.selectedCompany.id,
+    };
+    const next = () => { this.showDetailsModal = false; this.load(); };
+    const error = (e: any) => { this.errors['api'] = e?.error?.error || 'Erreur serveur'; };
+
+    if (this.selectedLicense?.id) {
+      this.licenseService.update(this.selectedLicense.id, payload).subscribe({ next, error });
+    } else {
+      this.licenseService.create(payload).subscribe({ next, error });
+    }
+  }
+
+  onDetailsUsers() {
+    if (!this.selectedCompany) return;
+    this.router.navigate(['/users'], { queryParams: { companyId: this.selectedCompany.id } });
   }
 
   close() { this.showModal = false; }
@@ -222,10 +326,35 @@ export class CompaniesComponent implements OnInit {
         if (!user.password || user.password.trim() === '') {
           errors[`users.${index}.password`] = 'Le mot de passe est obligatoire';
         }
+        if (!user.role) {
+          errors[`users.${index}.role`] = 'Le rôle est obligatoire';
+        }
       });
     }
 
     return errors;
+  }
+
+  isUserPermChecked(user: any, key: string): boolean {
+    return Array.isArray(user.permissions) && user.permissions.includes(key);
+  }
+
+  toggleUserPermission(user: any, key: string) {
+    if (!Array.isArray(user.permissions)) {
+      user.permissions = [];
+    }
+    const idx = user.permissions.indexOf(key);
+    if (idx >= 0) {
+      user.permissions.splice(idx, 1);
+    } else {
+      user.permissions.push(key);
+    }
+  }
+
+  onUserRoleChange(user: any) {
+    if (user.role && this.ROLE_PRESETS[user.role]) {
+      user.permissions = [...this.ROLE_PRESETS[user.role]];
+    }
   }
 
   // Méthodes pour gérer les utilisateurs dans le formulaire combiné

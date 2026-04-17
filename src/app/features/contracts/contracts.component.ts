@@ -1,9 +1,9 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ContractService, EmployeeService } from '../../core/services/domain.services';
+import { ContractService, EmployeeService, CompanyService } from '../../core/services/domain.services';
 import { AuthService } from '../../core/services/auth.service';
-import { CONTRACT_TYPE_OPTIONS, CONTRACT_STATUS_OPTIONS } from '../../core/models';
+import { CONTRACT_TYPE_OPTIONS, CONTRACT_STATUS_OPTIONS, Company } from '../../core/models';
 
 @Component({
   selector: 'app-contracts',
@@ -16,11 +16,13 @@ export class ContractsComponent implements OnInit {
   items: any[] = [];
   filtered: any[] = [];
   employees: any[] = [];
+  companies: Company[] = [];
   loading = true;
   showModal = false;
   editing = false;
   editingId = '';
   search = '';
+  companyFilterId = '';
   error = '';
 
   readonly typeOptions = CONTRACT_TYPE_OPTIONS;
@@ -31,6 +33,7 @@ export class ContractsComponent implements OnInit {
   constructor(
     private service: ContractService,
     private employeeService: EmployeeService,
+    private companyService: CompanyService,
     private auth: AuthService,
     private cdr: ChangeDetectorRef
   ) {}
@@ -38,10 +41,17 @@ export class ContractsComponent implements OnInit {
   ngOnInit() {
     this.load();
     this.loadEmployees();
+    if (this.auth.isSuperAdmin()) {
+      this.loadCompanies();
+    }
   }
 
   loadEmployees() {
     this.employeeService.getAll().subscribe({ next: (d) => { this.employees = d; this.cdr.detectChanges(); } });
+  }
+
+  loadCompanies() {
+    this.companyService.getAll().subscribe({ next: (data) => { this.companies = data; } });
   }
 
   load() {
@@ -54,13 +64,18 @@ export class ContractsComponent implements OnInit {
 
   applySearch() {
     const q = this.search.toLowerCase();
-    this.filtered = q
-      ? this.items.filter(i =>
-          this.getEmployeeName(i.employeeId).toLowerCase().includes(q) ||
+    this.filtered = this.items.filter(i => {
+      const matchesSearch = q
+        ? this.getEmployeeName(i.employeeId).toLowerCase().includes(q) ||
           i.contractType?.toLowerCase().includes(q) ||
           i.status?.toLowerCase().includes(q)
-        )
-      : [...this.items];
+        : true;
+      const employee = this.employees.find(e => e.id === i.employeeId);
+      const matchesCompany = this.companyFilterId
+        ? employee?.companyId === this.companyFilterId
+        : true;
+      return matchesSearch && matchesCompany;
+    });
   }
 
   onSearch() { this.applySearch(); }
@@ -68,6 +83,10 @@ export class ContractsComponent implements OnInit {
   getEmployeeName(id: string): string {
     const e = this.employees.find(e => e.id === id);
     return e ? `${e.firstName} ${e.lastName}` : 'Chargement...';
+  }
+
+  get isSuperAdmin(): boolean {
+    return this.auth.isSuperAdmin();
   }
 
   emptyForm() {
@@ -110,8 +129,9 @@ export class ContractsComponent implements OnInit {
       this.cdr.detectChanges();
       return;
     }
+    const employee = this.employees.find(e => e.id === this.form.employeeId);
     const payload: any = {
-      companyId: this.auth.currentUser()?.companyId,
+      companyId: employee?.companyId ?? this.auth.currentUser()?.companyId,
       employeeId: this.form.employeeId,
       contractType: this.form.contractType,
       status: this.form.status,

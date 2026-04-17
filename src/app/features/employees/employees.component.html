@@ -11,9 +11,15 @@
 <div class="table-container">
   <div class="table-toolbar">
     <h2>Employés</h2>
-    <div class="search-input">
-      <i class="bi bi-search"></i>
-      <input type="text" placeholder="Rechercher..." [(ngModel)]="search" (input)="onSearch()" />
+    <div class="toolbar-actions">
+      <div class="search-input">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" placeholder="Rechercher..." [(ngModel)]="search" (input)="onSearch()" />
+      </div>
+      <select class="form-select filter-select" *ngIf="isSuperAdmin && companies.length > 0" [(ngModel)]="companyFilterId" (change)="applyFilters()">
+        <option value="">Toutes les entreprises</option>
+        <option *ngFor="let company of companies" [value]="company.id">{{ company.name }}</option>
+      </select>
     </div>
   </div>
 

@@ -18,9 +18,16 @@
 <div class="table-container">
   <div class="table-toolbar">
     <h2>Liste des utilisateurs</h2>
-    <div class="search-input">
-      <i class="bi bi-search"></i>
-      <input type="text" placeholder="Rechercher par nom, email ou rôle..." [(ngModel)]="search" (input)="onSearch()" />
+    <div class="toolbar-actions">
+      <div class="search-input">
+        <i class="bi bi-search"></i>
+        <input type="text" placeholder="Rechercher par nom, email ou rôle..." [(ngModel)]="search" (input)="onSearch()" />
+      </div>
+      <select class="form-select filter-select" *ngIf="auth.isSuperAdmin() && companies.length > 0"
+              [(ngModel)]="companyFilterId" (change)="applySearch()">
+        <option value="">Toutes les entreprises</option>
+        <option *ngFor="let company of companies" [value]="company.id">{{ company.name }}</option>
+      </select>
     </div>
   </div>
 

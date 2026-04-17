@@ -48,6 +48,7 @@ export class UsersComponent implements OnInit {
   editing = false;
   editingId = '';
   search = '';
+  companyFilterId = '';
   error = '';
   showPassword = false;
   queryCompanyId = '';
@@ -119,13 +120,15 @@ export class UsersComponent implements OnInit {
 
   applySearch() {
     const q = this.search.toLowerCase();
-    this.filtered = q
-      ? this.items.filter(i =>
-          `${i.firstName} ${i.lastName}`.toLowerCase().includes(q) ||
-          i.email?.toLowerCase().includes(q) ||
-          i.role?.toLowerCase().includes(q)
-        )
-      : [...this.items];
+    this.filtered = this.items.filter(item => {
+      const companyId = item.company?.id || item.companyId || '';
+      const matchesSearch = q
+        ? `${item.firstName} ${item.lastName} ${item.email ?? ''} ${item.role ?? ''}`
+            .toLowerCase().includes(q)
+        : true;
+      const matchesCompany = this.companyFilterId ? companyId === this.companyFilterId : true;
+      return matchesSearch && matchesCompany;
+    });
   }
 
   onSearch() { this.applySearch(); }

@@ -57,13 +57,13 @@ export class SidebarComponent {
   isVisible(item: NavItem): boolean {
     if (item.children) {
       return item.children.some(c => {
-        if (c.permission === 'licenses') {
+        if (c.permission === 'licenses' || c.permission === 'companies') {
           return this.auth.isSuperAdmin();
         }
         return this.auth.hasPermission(c.permission ?? '');
       });
     }
-    if (item.permission === 'licenses') {
+    if (item.permission === 'licenses' || item.permission === 'companies') {
       return this.auth.isSuperAdmin();
     }
     return this.auth.hasPermission(item.permission ?? '');
@@ -72,7 +72,7 @@ export class SidebarComponent {
   visibleChildren(item: NavItem): NavItem[] {
     if (!item.children) return [];
     return item.children.filter(c => {
-      if (c.permission === 'licenses') {
+      if (c.permission === 'licenses' || c.permission === 'companies') {
         return this.auth.isSuperAdmin();
       }
       return this.auth.hasPermission(c.permission ?? '');

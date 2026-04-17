@@ -26,6 +26,7 @@ export class DepartmentsComponent implements OnInit {
   editing   = false;
   editingId = '';
   search    = '';
+  companyFilterId = '';
   errors: FormErrors = {};
 
   form: CreateDepartmentPayload = {
@@ -68,15 +69,22 @@ export class DepartmentsComponent implements OnInit {
 
   load() {
     this.service.getAll().subscribe({
-      next: (data) => { this.items = data; this.filtered = data; },
+      next: (data) => { this.items = data; this.applyFilters(); },
     });
   }
 
   onSearch() {
+    this.applyFilters();
+  }
+
+  applyFilters() {
     const q = this.search.toLowerCase();
-    this.filtered = this.items.filter(i =>
-      `${i.name} ${i.code ?? ''} ${i.description ?? ''}`.toLowerCase().includes(q)
-    );
+    this.filtered = this.items.filter(i => {
+      const matchesSearch = `${i.name} ${i.code ?? ''} ${i.description ?? ''}`
+        .toLowerCase().includes(q);
+      const matchesCompany = this.companyFilterId ? i.companyId === this.companyFilterId : true;
+      return matchesSearch && matchesCompany;
+    });
   }
 
   openCreate() {

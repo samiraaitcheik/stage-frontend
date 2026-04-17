@@ -11,19 +11,23 @@
 <div class="table-container">
   <div class="table-toolbar">
     <h2>Liste des contrats</h2>
-    <div class="search-input">
-      <i class="bi bi-search"></i>
-      <input type="text" placeholder="Rechercher par employé, type ou statut..." [(ngModel)]="search" (input)="onSearch()" />
+    <div class="toolbar-actions">
+      <div class="search-input">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" placeholder="Rechercher par employé, type ou statut..." [(ngModel)]="search" (input)="onSearch()" />
+      </div>
+      <select class="form-select filter-select" *ngIf="isSuperAdmin && companies.length > 0" [(ngModel)]="companyFilterId" (change)="onSearch()">
+        <option value="">Toutes les entreprises</option>
+        <option *ngFor="let company of companies" [value]="company.id">{{ company.name }}</option>
+      </select>
     </div>
   </div>
-
-  <div *ngIf="loading" class="loading-spinner"></div>
-
-  <div class="table-scroll" *ngIf="!loading">
-    <table *ngIf="filtered.length > 0">
-      <thead>
-        <tr>
-          <th>Employé</th>
+    <div *ngIf="loading" class="loading-spinner"></div>
+    <div class="table-scroll" *ngIf="!loading">
+      <table *ngIf="filtered.length > 0">
+        <thead>
+          <tr>
+            <th>Employé</th>
           <th>Type</th>
           <th>Statut</th>
           <th>Date début</th>

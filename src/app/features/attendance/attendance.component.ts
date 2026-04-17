@@ -1,9 +1,9 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AttendanceService, EmployeeService } from '../../core/services/domain.services';
+import { AttendanceService, EmployeeService, CompanyService } from '../../core/services/domain.services';
 import { AuthService } from '../../core/services/auth.service';
-import { ATTENDANCE_STATUS_OPTIONS } from '../../core/models';
+import { ATTENDANCE_STATUS_OPTIONS, Company } from '../../core/models';
 
 @Component({
   selector: 'app-attendance',
@@ -16,11 +16,13 @@ export class AttendanceComponent implements OnInit {
   items: any[] = [];
   filtered: any[] = [];
   employees: any[] = [];
+  companies: Company[] = [];
   loading = true;
   showModal = false;
   editing = false;
   editingId = '';
   search = '';
+  companyFilterId = '';
   error = '';
 
   readonly statusOptions = ATTENDANCE_STATUS_OPTIONS;
@@ -30,6 +32,7 @@ export class AttendanceComponent implements OnInit {
   constructor(
     private service: AttendanceService,
     private employeeService: EmployeeService,
+    private companyService: CompanyService,
     private auth: AuthService,
     private cdr: ChangeDetectorRef // Bach l-modal t-reagi de suite
   ) {}
@@ -37,16 +40,23 @@ export class AttendanceComponent implements OnInit {
   ngOnInit() {
     this.load();
     this.loadEmployees();
+    if (this.auth.isSuperAdmin()) {
+      this.loadCompanies();
+    }
   }
 
   loadEmployees() {
     this.employeeService.getAll().subscribe({
-      next: (data) => { 
-        this.employees = data; 
+      next: (data) => {
+        this.employees = data;
         this.cdr.detectChanges();
       },
       error: () => {}
     });
+  }
+
+  loadCompanies() {
+    this.companyService.getAll().subscribe({ next: (data) => { this.companies = data; } });
   }
 
   load() {
@@ -67,13 +77,18 @@ export class AttendanceComponent implements OnInit {
 
   applySearch() {
     const q = this.search.toLowerCase();
-    this.filtered = q
-      ? this.items.filter(i =>
-          this.getEmployeeName(i.employeeId).toLowerCase().includes(q) ||
+    this.filtered = this.items.filter(i => {
+      const matchesSearch = q
+        ? this.getEmployeeName(i.employeeId).toLowerCase().includes(q) ||
           i.status?.toLowerCase().includes(q) ||
           i.date?.slice(0,10).includes(q)
-        )
-      : [...this.items];
+        : true;
+      const employee = this.employees.find(e => e.id === i.employeeId);
+      const matchesCompany = this.companyFilterId
+        ? employee?.companyId === this.companyFilterId
+        : true;
+      return matchesSearch && matchesCompany;
+    });
   }
 
   onSearch() { this.applySearch(); }
@@ -81,6 +96,14 @@ export class AttendanceComponent implements OnInit {
   getEmployeeName(id: string): string {
     const e = this.employees.find(e => e.id === id);
     return e ? `${e.firstName} ${e.lastName}` : 'Employé inconnu';
+  }
+
+  companyName(id: string): string {
+    return this.companies.find(c => c.id === id)?.name ?? '—';
+  }
+
+  get isSuperAdmin(): boolean {
+    return this.auth.isSuperAdmin();
   }
 
   emptyForm() {
@@ -128,8 +151,9 @@ export class AttendanceComponent implements OnInit {
       return;
     }
 
+    const employee = this.employees.find(e => e.id === this.form.employeeId);
     const payload: any = {
-      companyId: this.auth.currentUser()?.companyId,
+      companyId: employee?.companyId ?? this.auth.currentUser()?.companyId,
       employeeId: this.form.employeeId,
       date: this.form.date,
       status: this.form.status,

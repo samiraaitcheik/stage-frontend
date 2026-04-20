@@ -1,0 +1,198 @@
+/* Modern Filter Panel & Button Styling */
+.btn-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
+  position: relative;
+  white-space: nowrap;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+  }
+
+  &.active {
+    background: linear-gradient(135deg, #4338ca 0%, #3730a3 100%);
+  }
+
+  .filter-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    background: #ff4444;
+    color: white;
+    border-radius: 50%;
+    font-size: 0.75rem;
+    font-weight: 700;
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.active-filters { display: flex; align-items: center; gap: 10px; }
+.filter-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, #eff6ff 0%, #ecfccb 100%);
+  border: 1.5px solid #4f46e5;
+  border-radius: 20px;
+  color: #1f2937;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.chip-remove { background: none; border: none; color: #9ca3af; cursor: pointer; padding: 0; display: flex; align-items: center; }
+
+.filter-panel {
+  position: fixed;
+  top: 140px;
+  right: 40px;
+  width: 380px;
+  max-width: calc(100vw - 80px);
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  animation: popDown 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+@keyframes popDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+..filter-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  background: white;
+}
+.filter-panel-header h4 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111827;
+}
+.close-btn {
+  width: 38px;
+  height: 38px;
+  border: none;
+  background: #f3f4f6;
+  color: #6b7280;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.close-btn:hover {
+  background: #e5e7eb;
+  transform: translateY(-1px);
+}
+
+.filter-panel-body {
+  padding: 20px 24px;
+}
+.filter-section {
+  margin-bottom: 20px;
+}
+
+.filter-section h5 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 16px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #111827;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.filter-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.filter-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.filter-option:hover {
+  background: #f8fafc;
+  border-color: #d1d5db;
+}
+
+.filter-option i {
+  min-width: 24px;
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+.filter-option span {
+  flex: 1;
+  text-align: left;
+}
+
+.filter-option.active {
+  background: #eff6ff;
+  border-color: #4f46e5;
+  color: #1e3a8a;
+}
+
+.filter-option.active i {
+  color: #4f46e5;
+}
+
+.filter-panel-footer {
+  padding: 18px 24px;
+  border-top: 1px solid #e5e7eb;
+  background: #f8fafc;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.filter-panel-footer .btn {
+  min-width: 100px;
+}

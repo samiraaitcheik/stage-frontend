@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CompanyService, LicenseService, UserService, SuperAdminService } from '../../core/services/domain.services';
 import { AuthService } from '../../core/services/auth.service';
+import { ToastService } from '../../core/services/toast.service';
 import {
   Company, CreateCompanyPayload, UpdateCompanyPayload,
   CreateCompanyWithLicenseAndUsersPayload, CreateLicensePayload, CreateUserPayload,
@@ -26,7 +27,8 @@ export class CompaniesComponent implements OnInit {
   editing = false;
   editingId = '';
   search = '';
-  companyFilterId = '';
+  selectedCompanyIds: string[] = [];
+  selectedStatuses: string[] = [];
   errors: FormErrors = {};
   createMode: 'simple' | 'combined' = 'combined';
 
@@ -66,10 +68,14 @@ export class CompaniesComponent implements OnInit {
     VIEWER: ['dashboard', 'users'],
   };
 
-  // Nouveau: formulaire combiné
   combinedForm: CreateCompanyWithLicenseAndUsersPayload = this.emptyCombinedForm();
-
   form: CreateCompanyPayload = this.emptyForm();
+
+  showPassword: { [key: number]: boolean } = {};
+  showFilterPanel = false;
+  filterPanelTab: 'company' | 'status' = 'company';
+  pendingCompanyIds: string[] = [];
+  pendingStatuses: string[] = [];
 
   constructor(
     private service: CompanyService,
@@ -77,7 +83,8 @@ export class CompaniesComponent implements OnInit {
     private userService: UserService,
     private superAdminService: SuperAdminService,
     public auth: AuthService,
-    private router: Router
+    private router: Router,
+    private toastService: ToastService
   ) {}
 
   ngOnInit() { this.load(); }
@@ -90,19 +97,78 @@ export class CompaniesComponent implements OnInit {
     });
   }
 
-  onSearch() {
-    this.applyFilters();
+  // ─── Filter Panel ───────────────────────────────────────────────────────────
+
+  openFilterPanel() {
+    this.pendingCompanyIds = [...this.selectedCompanyIds];
+    this.pendingStatuses = [...this.selectedStatuses];
+    this.showFilterPanel = true;
   }
+
+  closeFilterPanel() {
+    this.pendingCompanyIds = [...this.selectedCompanyIds];
+    this.pendingStatuses = [...this.selectedStatuses];
+    this.showFilterPanel = false;
+  }
+
+  setFilterPanelTab(tab: 'company' | 'status') {
+    this.filterPanelTab = tab;
+  }
+
+  togglePendingCompanySelection(companyId: string) {
+    const index = this.pendingCompanyIds.indexOf(companyId);
+    index >= 0 ? this.pendingCompanyIds.splice(index, 1) : this.pendingCompanyIds.push(companyId);
+  }
+
+  isPendingCompanySelected(companyId: string): boolean {
+    return this.pendingCompanyIds.includes(companyId);
+  }
+
+  togglePendingStatusSelection(status: string) {
+    const index = this.pendingStatuses.indexOf(status);
+    index >= 0 ? this.pendingStatuses.splice(index, 1) : this.pendingStatuses.push(status);
+  }
+
+  isPendingStatusSelected(status: string): boolean {
+    return this.pendingStatuses.includes(status);
+  }
+
+  applyPendingFilters() {
+    this.selectedCompanyIds = [...this.pendingCompanyIds];
+    this.selectedStatuses = [...this.pendingStatuses];
+    this.applyFilters();
+    this.showFilterPanel = false;
+  }
+
+  resetPendingFilters() {
+    this.pendingCompanyIds = [];
+    this.pendingStatuses = [];
+  }
+
+  removeSelectedCompany(companyId: string) {
+    const index = this.selectedCompanyIds.indexOf(companyId);
+    if (index >= 0) { this.selectedCompanyIds.splice(index, 1); this.applyFilters(); }
+  }
+
+  removeSelectedStatus(status: string) {
+    const index = this.selectedStatuses.indexOf(status);
+    if (index >= 0) { this.selectedStatuses.splice(index, 1); this.applyFilters(); }
+  }
+
+  onSearch() { this.applyFilters(); }
 
   applyFilters() {
     const q = this.search.toLowerCase();
     this.filtered = this.items.filter((item) => {
       const matchSearch = `${item.name} ${item.legalName ?? ''} ${item.email ?? ''} ${item.phone ?? ''} ${item.city ?? ''}`
         .toLowerCase().includes(q);
-      const matchCompany = this.companyFilterId ? item.id === this.companyFilterId : true;
-      return matchSearch && matchCompany;
+      const matchCompany = this.selectedCompanyIds.length === 0 || this.selectedCompanyIds.includes(item.id);
+      const matchStatus  = this.selectedStatuses.length === 0   || this.selectedStatuses.includes(item.status);
+      return matchSearch && matchCompany && matchStatus;
     });
   }
+
+  // ─── CRUD ───────────────────────────────────────────────────────────────────
 
   openCreate() {
     this.createMode = 'combined';
@@ -114,20 +180,20 @@ export class CompaniesComponent implements OnInit {
 
   openEdit(item: Company) {
     this.form = {
-      name:           item.name,
-      legalName:      item.legalName      ?? '',
-      taxIdentifier:  item.taxIdentifier   ?? '',
-      rcNumber:       item.rcNumber       ?? '',
-      iceNumber:      item.iceNumber      ?? '',
-      cnssNumber:     item.cnssNumber     ?? '',
-      email:          item.email          ?? '',
-      phone:          item.phone          ?? '',
-      address:        item.address        ?? '',
-      city:           item.city           ?? '',
-      country:        item.country        ?? 'Maroc',
-      timezone:       item.timezone       ?? 'Africa/Casablanca',
-      currency:       item.currency       ?? 'MAD',
-      status:         item.status,
+      name:          item.name,
+      legalName:     item.legalName      ?? '',
+      taxIdentifier: item.taxIdentifier  ?? '',
+      rcNumber:      item.rcNumber       ?? '',
+      iceNumber:     item.iceNumber      ?? '',
+      cnssNumber:    item.cnssNumber     ?? '',
+      email:         item.email          ?? '',
+      phone:         item.phone          ?? '',
+      address:       item.address        ?? '',
+      city:          item.city           ?? '',
+      country:       item.country        ?? 'Maroc',
+      timezone:      item.timezone       ?? 'Africa/Casablanca',
+      currency:      item.currency       ?? 'MAD',
+      status:        item.status,
     };
     this.editing = true; this.editingId = item.id; this.errors = {};
     this.showModal = true;
@@ -135,42 +201,66 @@ export class CompaniesComponent implements OnInit {
 
   save() {
     if (this.editing) {
-      // Mode édition (simple)
       this.errors = validateRequired(this.form as any, ['name']);
       if (Object.keys(this.errors).length) return;
 
-      const next = () => { this.showModal = false; this.load(); };
-      const error = (e: any) => { this.errors['api'] = e?.error?.error || 'Erreur serveur'; };
+      this.service.update(this.editingId, this.form as UpdateCompanyPayload).subscribe({
+        next: () => {
+          this.showModal = false;
+          this.load();
+          this.toastService.success('Entreprise modifiée avec succès');
+        },
+        error: (e: any) => {
+          this.errors['api'] = e?.error?.error || 'Erreur serveur';
+          this.toastService.error('Erreur lors de la modification');
+        }
+      });
 
-      this.service.update(this.editingId, this.form as UpdateCompanyPayload).subscribe({ next, error });
     } else {
-      // Mode création
       if (this.createMode === 'simple') {
-        // Création simple d'entreprise
         this.errors = validateRequired(this.form as any, ['name']);
         if (Object.keys(this.errors).length) return;
 
-        const next = () => { this.showModal = false; this.load(); };
-        const error = (e: any) => { this.errors['api'] = e?.error?.error || 'Erreur serveur'; };
+        this.superAdminService.createCompany(this.form).subscribe({
+          next: () => {
+            this.showModal = false;
+            this.load();
+            this.toastService.success('Entreprise créée avec succès');
+          },
+          error: (e: any) => {
+            this.errors['api'] = e?.error?.error || 'Erreur serveur';
+            this.toastService.error('Erreur lors de la création');
+          }
+        });
 
-        this.superAdminService.createCompany(this.form).subscribe({ next, error });
       } else {
-        // Création combinée
         this.errors = this.validateCombinedForm();
         if (Object.keys(this.errors).length) return;
 
-        const next = () => { this.showModal = false; this.load(); };
-        const error = (e: any) => { this.errors['api'] = e?.error?.error || 'Erreur serveur'; };
-
-        this.superAdminService.createCompanyWithLicenseAndUsers(this.combinedForm).subscribe({ next, error });
+        this.superAdminService.createCompanyWithLicenseAndUsers(this.combinedForm).subscribe({
+          next: () => {
+            this.showModal = false;
+            this.load();
+            this.toastService.success('Entreprise, licence et utilisateurs créés avec succès');
+          },
+          error: (e: any) => {
+            this.errors['api'] = e?.error?.error || 'Erreur serveur';
+            this.toastService.error('Erreur lors de la création');
+          }
+        });
       }
     }
   }
 
   delete(id: string) {
     if (!confirm('Supprimer cette entreprise ?')) return;
-    this.service.delete(id).subscribe({ next: () => this.load() });
+    this.service.delete(id).subscribe({
+      next: () => { this.load(); this.toastService.success('Entreprise supprimée'); },
+      error: () => { this.toastService.error('Erreur lors de la suppression'); }
+    });
   }
+
+  // ─── Details Modal ──────────────────────────────────────────────────────────
 
   viewDetails(company: Company) {
     this.selectedCompany = company;
@@ -199,42 +289,80 @@ export class CompaniesComponent implements OnInit {
 
   saveCompanyDetails() {
     if (!this.selectedCompany) return;
-    const payload = {
-      name: this.selectedCompany.name,
-      legalName: this.selectedCompany.legalName,
-      taxIdentifier: this.selectedCompany.taxIdentifier,
-      rcNumber: this.selectedCompany.rcNumber,
-      iceNumber: this.selectedCompany.iceNumber,
-      cnssNumber: this.selectedCompany.cnssNumber,
-      email: this.selectedCompany.email,
-      phone: this.selectedCompany.phone,
-      address: this.selectedCompany.address,
-      city: this.selectedCompany.city,
-      country: this.selectedCompany.country,
-      timezone: this.selectedCompany.timezone,
-      currency: this.selectedCompany.currency,
-      status: this.selectedCompany.status,
-    };
-    const next = () => { this.showDetailsModal = false; this.load(); };
-    const error = (e: any) => { this.errors['api'] = e?.error?.error || 'Erreur serveur'; };
 
-    this.service.update(this.selectedCompany.id, payload as UpdateCompanyPayload).subscribe({ next, error });
+    const loadingId = this.toastService.loading('Modification en cours...');
+
+    const payload: UpdateCompanyPayload = {
+      name:          this.selectedCompany.name ?? undefined,
+      legalName:     this.selectedCompany.legalName ?? undefined,
+      taxIdentifier: this.selectedCompany.taxIdentifier ?? undefined,
+      rcNumber:      this.selectedCompany.rcNumber ?? undefined,
+      iceNumber:     this.selectedCompany.iceNumber ?? undefined,
+      cnssNumber:    this.selectedCompany.cnssNumber ?? undefined,
+      email:         this.selectedCompany.email ?? undefined,
+      phone:         this.selectedCompany.phone ?? undefined,
+      address:       this.selectedCompany.address ?? undefined,
+      city:          this.selectedCompany.city ?? undefined,
+      country:       this.selectedCompany.country ?? undefined,
+      timezone:      this.selectedCompany.timezone ?? undefined,
+      currency:      this.selectedCompany.currency ?? undefined,
+      status:        this.selectedCompany.status ?? undefined,
+    };
+
+    this.service.update(this.selectedCompany.id, payload).subscribe({
+      next: () => {
+        this.toastService.update(loadingId, 'Entreprise modifiée avec succès', 'success', 4000);
+        this.detailEditSection = '' as any;
+        this.load();
+      },
+      error: (e: any) => {
+        this.toastService.update(loadingId, 'Erreur lors de la modification', 'error', 4000);
+        this.errors['api'] = e?.error?.error || 'Erreur serveur';
+      }
+    });
   }
 
   saveLicenseDetails() {
     if (!this.selectedCompany) return;
+
+    const loadingId = this.toastService.loading('Modification de la licence en cours...');
+
     const payload = {
       ...(this.selectedLicense || {}),
       companyId: this.selectedCompany.id,
     };
-    const next = () => { this.showDetailsModal = false; this.load(); };
-    const error = (e: any) => { this.errors['api'] = e?.error?.error || 'Erreur serveur'; };
+
+    const onNext = () => {
+      this.toastService.update(loadingId, 'Licence mise à jour avec succès', 'success', 4000);
+      this.detailEditSection = '' as any;
+      this.load();
+    };
+    const onError = (e: any) => {
+      this.toastService.update(loadingId, 'Erreur lors de la mise à jour de la licence', 'error', 4000);
+      this.errors['api'] = e?.error?.error || 'Erreur serveur';
+    };
 
     if (this.selectedLicense?.id) {
-      this.licenseService.update(this.selectedLicense.id, payload).subscribe({ next, error });
+      this.licenseService.update(this.selectedLicense.id, payload).subscribe({ next: onNext, error: onError });
     } else {
-      this.licenseService.create(payload).subscribe({ next, error });
+      this.licenseService.create(payload).subscribe({ next: onNext, error: onError });
     }
+  }
+
+  cancelCompanyEdit() {
+    console.log('Annulation des modifications entreprise');
+    // Fermer le panneau d'édition
+    this.detailEditSection = '' as any;
+    // Afficher un message de succès pour l'annulation
+    this.toastService.success('Modifications annulées avec succès', 3000);
+  }
+
+  cancelLicenseEdit() {
+    console.log('Annulation des modifications licence');
+    // Fermer le panneau d'édition
+    this.detailEditSection = '' as any;
+    // Afficher un message de succès pour l'annulation
+    this.toastService.success('Modifications de la licence annulées avec succès', 3000);
   }
 
   onDetailsUsers() {
@@ -242,12 +370,12 @@ export class CompaniesComponent implements OnInit {
     this.router.navigate(['/users'], { queryParams: { companyId: this.selectedCompany.id } });
   }
 
+  // ─── Helpers ────────────────────────────────────────────────────────────────
+
   close() { this.showModal = false; }
   hasError(f: string) { return !!this.errors[f]; }
 
-  get isSuperAdmin(): boolean {
-    return this.auth.isSuperAdmin();
-  }
+  get isSuperAdmin(): boolean { return this.auth.isSuperAdmin(); }
 
   private emptyForm(): CreateCompanyPayload {
     return {
@@ -265,7 +393,7 @@ export class CompaniesComponent implements OnInit {
         planCode: 'BASIC',
         status: 'TRIAL',
         billingCycle: 'MONTHLY',
-        startsAt: new Date().toISOString().split('T')[0], // Aujourd'hui
+        startsAt: new Date().toISOString().split('T')[0],
         endsAt: '',
         maxUsers: undefined,
         maxEmployees: undefined,
@@ -278,17 +406,9 @@ export class CompaniesComponent implements OnInit {
         notes: '',
       },
       users: [{
-        firstName: '',
-        lastName: '',
-        email: '',
-        password: '',
-        phone: '',
-        role: 'ADMIN',
-        status: 'ACTIVE',
-        permissions: [
-          "dashboard", "employees", "organisation", "attendance",
-          "contracts", "payroll", "reports", "users",
-        ],
+        firstName: '', lastName: '', email: '', password: '',
+        phone: '', role: 'ADMIN', status: 'ACTIVE',
+        permissions: ['dashboard', 'employees', 'organisation', 'attendance', 'contracts', 'payroll', 'reports', 'users'],
       }],
     };
   }
@@ -296,59 +416,40 @@ export class CompaniesComponent implements OnInit {
   private validateCombinedForm(): FormErrors {
     const errors: FormErrors = {};
 
-    // Validation entreprise
-    if (!this.combinedForm.company.name || this.combinedForm.company.name.trim() === '') {
+    if (!this.combinedForm.company.name?.trim()) {
       errors['company.name'] = 'Le nom de l\'entreprise est obligatoire';
     }
-
-    // Validation licence
     if (!this.combinedForm.license.planCode) {
       errors['license.planCode'] = 'Le plan de licence est obligatoire';
     }
     if (!this.combinedForm.license.startsAt) {
       errors['license.startsAt'] = 'La date de début de licence est obligatoire';
     }
-
-    // Validation utilisateurs
-    if (!this.combinedForm.users || this.combinedForm.users.length === 0) {
+    if (!this.combinedForm.users?.length) {
       errors['users'] = 'Au moins un utilisateur doit être ajouté';
     } else {
-      this.combinedForm.users.forEach((user, index) => {
-        if (!user.firstName || user.firstName.trim() === '') {
-          errors[`users.${index}.firstName`] = 'Le prénom est obligatoire';
-        }
-        if (!user.lastName || user.lastName.trim() === '') {
-          errors[`users.${index}.lastName`] = 'Le nom est obligatoire';
-        }
-        if (!user.email || user.email.trim() === '') {
-          errors[`users.${index}.email`] = 'L\'email est obligatoire';
-        }
-        if (!user.password || user.password.trim() === '') {
-          errors[`users.${index}.password`] = 'Le mot de passe est obligatoire';
-        }
-        if (!user.role) {
-          errors[`users.${index}.role`] = 'Le rôle est obligatoire';
-        }
+      this.combinedForm.users.forEach((user, i) => {
+        if (!user.firstName?.trim()) errors[`users.${i}.firstName`] = 'Le prénom est obligatoire';
+        if (!user.lastName?.trim())  errors[`users.${i}.lastName`]  = 'Le nom est obligatoire';
+        if (!user.email?.trim())     errors[`users.${i}.email`]     = 'L\'email est obligatoire';
+        if (!user.password?.trim())  errors[`users.${i}.password`]  = 'Le mot de passe est obligatoire';
+        if (!user.role)              errors[`users.${i}.role`]      = 'Le rôle est obligatoire';
       });
     }
 
     return errors;
   }
 
+  // ─── Permissions ────────────────────────────────────────────────────────────
+
   isUserPermChecked(user: any, key: string): boolean {
     return Array.isArray(user.permissions) && user.permissions.includes(key);
   }
 
   toggleUserPermission(user: any, key: string) {
-    if (!Array.isArray(user.permissions)) {
-      user.permissions = [];
-    }
+    if (!Array.isArray(user.permissions)) user.permissions = [];
     const idx = user.permissions.indexOf(key);
-    if (idx >= 0) {
-      user.permissions.splice(idx, 1);
-    } else {
-      user.permissions.push(key);
-    }
+    idx >= 0 ? user.permissions.splice(idx, 1) : user.permissions.push(key);
   }
 
   onUserRoleChange(user: any) {
@@ -357,20 +458,13 @@ export class CompaniesComponent implements OnInit {
     }
   }
 
-  // Méthodes pour gérer les utilisateurs dans le formulaire combiné
+  // ─── Users (formulaire combiné) ─────────────────────────────────────────────
+
   addUser() {
     this.combinedForm.users.push({
-      firstName: '',
-      lastName: '',
-      email: '',
-      password: '',
-      phone: '',
-      role: 'ADMIN',
-      status: 'ACTIVE',
-      permissions: [
-        "dashboard", "employees", "organisation", "attendance",
-        "contracts", "payroll", "reports", "users",
-      ],
+      firstName: '', lastName: '', email: '', password: '',
+      phone: '', role: 'ADMIN', status: 'ACTIVE',
+      permissions: ['dashboard', 'employees', 'organisation', 'attendance', 'contracts', 'payroll', 'reports', 'users'],
     });
   }
 
@@ -379,5 +473,23 @@ export class CompaniesComponent implements OnInit {
       this.combinedForm.users.splice(index, 1);
     }
   }
-}
 
+  // ─── Password ───────────────────────────────────────────────────────────────
+
+  generatePassword(userIndex: number, strength: 'basic' | 'strong') {
+    const chars = {
+      basic:  'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
+      strong: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?'
+    };
+    const length = strength === 'strong' ? 16 : 10;
+    let password = '';
+    for (let i = 0; i < length; i++) {
+      password += chars[strength][Math.floor(Math.random() * chars[strength].length)];
+    }
+    this.combinedForm.users[userIndex].password = password;
+  }
+
+  togglePasswordVisibility(userIndex: number) {
+    this.showPassword[userIndex] = !this.showPassword[userIndex];
+  }
+}

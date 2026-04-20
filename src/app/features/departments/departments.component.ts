@@ -26,7 +26,9 @@ export class DepartmentsComponent implements OnInit {
   editing   = false;
   editingId = '';
   search    = '';
-  companyFilterId = '';
+  selectedCompanyId = '';
+  pendingCompanyId = '';
+  showFilterPanel = false;
   errors: FormErrors = {};
 
   form: CreateDepartmentPayload = {
@@ -77,12 +79,49 @@ export class DepartmentsComponent implements OnInit {
     this.applyFilters();
   }
 
+  openFilterPanel() {
+    this.pendingCompanyId = this.selectedCompanyId;
+    this.showFilterPanel = true;
+  }
+
+  closeFilterPanel() {
+    this.pendingCompanyId = this.selectedCompanyId;
+    this.showFilterPanel = false;
+  }
+
+  togglePendingCompanySelection(companyId: string) {
+    this.pendingCompanyId = this.pendingCompanyId === companyId ? '' : companyId;
+  }
+
+  isPendingCompanySelected(companyId: string): boolean {
+    return this.pendingCompanyId === companyId;
+  }
+
+  applyPendingFilters() {
+    this.selectedCompanyId = this.pendingCompanyId;
+    this.applyFilters();
+    this.closeFilterPanel();
+  }
+
+  resetPendingFilters() {
+    this.pendingCompanyId = '';
+  }
+
+  removePendingCompanies() {
+    this.resetPendingFilters();
+  }
+
+  removeSelectedCompany() {
+    this.selectedCompanyId = '';
+    this.applyFilters();
+  }
+
   applyFilters() {
     const q = this.search.toLowerCase();
     this.filtered = this.items.filter(i => {
       const matchesSearch = `${i.name} ${i.code ?? ''} ${i.description ?? ''}`
         .toLowerCase().includes(q);
-      const matchesCompany = this.companyFilterId ? i.companyId === this.companyFilterId : true;
+      const matchesCompany = this.selectedCompanyId ? i.companyId === this.selectedCompanyId : true;
       return matchesSearch && matchesCompany;
     });
   }

@@ -17,29 +17,39 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
         <input type="text" placeholder="Rechercher..." [(ngModel)]="search" (input)="onSearch()" />
       </div>
-      <select class="form-select filter-select" *ngIf="isSuperAdmin && companies.length > 0" [(ngModel)]="companyFilterId" (change)="applyFilters()">
-        <option value="">Toutes les entreprises</option>
-        <option *ngFor="let company of companies" [value]="company.id">{{ company.name }}</option>
-      </select>
+      <div class="active-filters" *ngIf="selectedCompanyId">
+        <div class="filter-chips">
+          <span class="filter-chip">
+            <i class="bi bi-building"></i>
+            {{ companies.find(c => c.id === selectedCompanyId)?.name }}
+            <button class="chip-remove" (click)="removeSelectedCompany()" type="button"><i class="bi bi-x"></i></button>
+          </span>
+        </div>
+      </div>
+      <button class="btn-filter" *ngIf="isSuperAdmin" (click)="openFilterPanel()" [class.active]="showFilterPanel">
+        <i class="bi bi-funnel-fill"></i>
+        <span>Filtrer</span>
+        <span class="filter-badge" *ngIf="selectedCompanyId">
+          1
+        </span>
+      </button>
     </div>
   </div>
-  <div *ngIf="loading" class="loading-spinner"></div>
 
-  <div class="table-scroll" *ngIf="!loading">
-    <table *ngIf="filtered.length > 0">
-      <thead>
-        <tr>
-          <th>Nom</th>
-          <th>Code</th>
-          <th>Entreprise</th>
-          <th>Description</th>
-          <th>Actif</th>
-          <th>Créé le</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let item of filtered">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Nom</th>
+        <th>Code</th>
+        <th>Entreprise</th>
+        <th>Description</th>
+        <th>Actif</th>
+        <th>Créé le</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let item of filtered">
           <td><strong>{{ item.name }}</strong></td>
           <td>
             <span class="badge badge-default" *ngIf="item.code">{{ item.code }}</span>
@@ -71,8 +81,30 @@
         </tr>
       </tbody>
     </table>
-    </div>
 </div>
+<div class="filter-panel" *ngIf="isSuperAdmin && showFilterPanel">
+  <div class="filter-panel-header">
+    <h4>Filtres</h4>
+    <button class="close-btn" (click)="closeFilterPanel()"><i class="bi bi-x-lg"></i></button>
+  </div>
+  <div class="filter-panel-body">
+    <div class="filter-section">
+      <h5><i class="bi bi-building"></i> Entreprise</h5>
+      <div class="filter-options">
+        <button class="filter-option" *ngFor="let company of companies" [class.active]="isPendingCompanySelected(company.id)" (click)="togglePendingCompanySelection(company.id)">
+          <i class="bi" [ngClass]="isPendingCompanySelected(company.id) ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+          <span>{{ company.name }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="filter-panel-footer">
+    <button class="btn btn-secondary" type="button" (click)="resetPendingFilters()">Réinitialiser</button>
+    <button class="btn btn-primary" type="button" (click)="applyPendingFilters()">Appliquer</button>
+    <button class="btn btn-secondary" type="button" (click)="closeFilterPanel()">Fermer</button>
+  </div>
+</div>
+
 
 <div class="modal-overlay" *ngIf="showModal" (click)="close()">
   <div class="custom-modal" (click)="$event.stopPropagation()">

@@ -28,6 +28,8 @@ export class PositionsComponent implements OnInit {
   editingId = '';
   search    = '';
   companyFilterId = '';
+  pendingCompanyId = '';
+  showFilterPanel = false;
   errors: FormErrors = {};
 
   form: CreatePositionPayload = {
@@ -66,6 +68,35 @@ export class PositionsComponent implements OnInit {
   }
 
   onSearch() {
+    this.applyFilters();
+  }
+
+  openFilterPanel() {
+    this.pendingCompanyId = this.companyFilterId;
+    this.showFilterPanel = true;
+  }
+
+  closeFilterPanel() {
+    this.pendingCompanyId = this.companyFilterId;
+    this.showFilterPanel = false;
+  }
+
+  selectPendingCompany(companyId: string) {
+    this.pendingCompanyId = this.pendingCompanyId === companyId ? '' : companyId;
+  }
+
+  applyPendingFilters() {
+    this.companyFilterId = this.pendingCompanyId;
+    this.applyFilters();
+    this.showFilterPanel = false;
+  }
+
+  resetPendingFilters() {
+    this.pendingCompanyId = '';
+  }
+
+  removeSelectedCompany() {
+    this.companyFilterId = '';
     this.applyFilters();
   }
 

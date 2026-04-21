@@ -40,6 +40,8 @@ export class LicensesComponent implements OnInit {
   editingId = '';
   search = '';
   companyFilterId = '';
+  showFilterPanel = false;
+  pendingCompanyId = '';
   errors: FormErrors = {};
   queryCompanyId = '';
 
@@ -100,6 +102,38 @@ export class LicensesComponent implements OnInit {
       const matchesCompany = this.companyFilterId ? i.companyId === this.companyFilterId : true;
       return matchesSearch && matchesCompany;
     });
+  }
+
+  clearCompanyFilter() {
+    this.companyFilterId = '';
+    this.applyFilters();
+  }
+
+  openFilterPanel() {
+    this.pendingCompanyId = this.companyFilterId;
+    this.showFilterPanel = true;
+  }
+
+  closeFilterPanel() {
+    this.showFilterPanel = false;
+  }
+
+  togglePendingCompanySelection(companyId: string) {
+    this.pendingCompanyId = this.pendingCompanyId === companyId ? '' : companyId;
+  }
+
+  isPendingCompanySelected(companyId: string): boolean {
+    return this.pendingCompanyId === companyId;
+  }
+
+  applyPendingFilters() {
+    this.companyFilterId = this.pendingCompanyId;
+    this.applyFilters();
+    this.showFilterPanel = false;
+  }
+
+  resetPendingFilters() {
+    this.pendingCompanyId = '';
   }
 
   get isSuperAdmin(): boolean { return this.auth.isSuperAdmin(); }

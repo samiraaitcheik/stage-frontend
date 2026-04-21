@@ -102,6 +102,7 @@ export interface User {
   phone?: string | null;
   role: string;
   status: UserStatus;
+  permissions?: string[];
   lastLoginAt?: string | null;
   createdAt: string;
   updatedAt: string;

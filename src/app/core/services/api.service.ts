@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 export const API_URL = 'http://localhost:3000';
@@ -8,16 +8,16 @@ export const API_URL = 'http://localhost:3000';
 export class ApiService {
   constructor(private http: HttpClient) {}
 
-  get<T>(path: string): Observable<T> {
-    return this.http.get<T>(`${API_URL}${path}`);
+  get<T>(path: string, options?: any): Observable<any> {
+    return this.http.get<any>(`${API_URL}${path}`, options);
   }
-  post<T>(path: string, body: any): Observable<T> {
-    return this.http.post<T>(`${API_URL}${path}`, body);
+  post<T>(path: string, body: any, options?: any): Observable<any> {
+    return this.http.post<any>(`${API_URL}${path}`, body, options);
   }
-  put<T>(path: string, body: any): Observable<T> {
-    return this.http.put<T>(`${API_URL}${path}`, body);
+  put<T>(path: string, body: any, options?: any): Observable<any> {
+    return this.http.put<any>(`${API_URL}${path}`, body, options);
   }
-  delete<T>(path: string): Observable<T> {
-    return this.http.delete<T>(`${API_URL}${path}`);
+  delete<T>(path: string, options?: any): Observable<any> {
+    return this.http.delete<any>(`${API_URL}${path}`, options);
   }
 }

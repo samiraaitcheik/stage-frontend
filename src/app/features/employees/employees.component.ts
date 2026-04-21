@@ -36,6 +36,8 @@ export class EmployeesComponent implements OnInit {
   editingId = '';
   search    = '';
   companyFilterId = '';
+  showFilterPanel = false;
+  pendingCompanyId = '';
   errors: FormErrors = {};
 
   readonly statusOptions = EMPLOYEE_STATUS_OPTIONS;
@@ -98,6 +100,38 @@ export class EmployeesComponent implements OnInit {
       const matchesCompany = this.companyFilterId ? i.companyId === this.companyFilterId : true;
       return matchesSearch && matchesCompany;
     });
+  }
+
+  clearCompanyFilter() {
+    this.companyFilterId = '';
+    this.applyFilters();
+  }
+
+  openFilterPanel() {
+    this.pendingCompanyId = this.companyFilterId;
+    this.showFilterPanel = true;
+  }
+
+  closeFilterPanel() {
+    this.showFilterPanel = false;
+  }
+
+  togglePendingCompanySelection(companyId: string) {
+    this.pendingCompanyId = this.pendingCompanyId === companyId ? '' : companyId;
+  }
+
+  isPendingCompanySelected(companyId: string): boolean {
+    return this.pendingCompanyId === companyId;
+  }
+
+  applyPendingFilters() {
+    this.companyFilterId = this.pendingCompanyId;
+    this.applyFilters();
+    this.showFilterPanel = false;
+  }
+
+  resetPendingFilters() {
+    this.pendingCompanyId = '';
   }
 
   openCreate() {

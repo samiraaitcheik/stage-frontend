@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AttendanceService, EmployeeService, CompanyService } from '../../core/services/domain.services';
+import { AttendanceService, EmployeeService, CompanyService, DepartmentService } from '../../core/services/domain.services';
 import { AuthService } from '../../core/services/auth.service';
 import { ATTENDANCE_STATUS_OPTIONS, Company } from '../../core/models';
 
@@ -16,13 +16,19 @@ export class AttendanceComponent implements OnInit {
   items: any[] = [];
   filtered: any[] = [];
   employees: any[] = [];
+  filteredEmployees: any[] = [];
   companies: Company[] = [];
+  departments: any[] = [];
   loading = true;
   showModal = false;
   editing = false;
   editingId = '';
+  showFilterPanel = false;
   search = '';
   companyFilterId = '';
+  pendingCompanyFilterId = '';
+  statusFilter = '';
+  pendingStatusFilter = '';
   error = '';
 
   readonly statusOptions = ATTENDANCE_STATUS_OPTIONS;
@@ -33,6 +39,7 @@ export class AttendanceComponent implements OnInit {
     private service: AttendanceService,
     private employeeService: EmployeeService,
     private companyService: CompanyService,
+    private departmentService: DepartmentService,
     private auth: AuthService,
     private cdr: ChangeDetectorRef // Bach l-modal t-reagi de suite
   ) {}
@@ -40,6 +47,7 @@ export class AttendanceComponent implements OnInit {
   ngOnInit() {
     this.load();
     this.loadEmployees();
+    this.loadDepartments();
     if (this.auth.isSuperAdmin()) {
       this.loadCompanies();
     }
@@ -49,6 +57,7 @@ export class AttendanceComponent implements OnInit {
     this.employeeService.getAll().subscribe({
       next: (data) => {
         this.employees = data;
+        this.filteredEmployees = [...this.employees];
         this.cdr.detectChanges();
       },
       error: () => {}
@@ -58,6 +67,35 @@ export class AttendanceComponent implements OnInit {
   loadCompanies() {
     this.companyService.getAll().subscribe({ next: (data) => { this.companies = data; } });
   }
+
+  loadDepartments() {
+    this.departmentService.getAll().subscribe({
+      next: (data: any) => {
+        this.departments = data;
+      },
+      error: () => {
+        console.error('Error loading departments');
+      }
+    });
+  }
+
+  onDepartmentChange() {
+    // Filter employees based on selected department
+    if (this.form.departmentId) {
+      this.filteredEmployees = this.employees.filter(emp => emp.departmentId === this.form.departmentId);
+      console.log('Filtered employees by department:', this.form.departmentId, this.filteredEmployees.length);
+    } else {
+      this.filteredEmployees = [...this.employees];
+      console.log('All employees shown');
+    }
+    
+    // Clear employee selection if it doesn't match the filtered list
+    if (this.form.employeeId && !this.filteredEmployees.find(emp => emp.id === this.form.employeeId)) {
+      this.form.employeeId = '';
+    }
+  }
+
+
 
   load() {
     this.loading = true;
@@ -87,11 +125,54 @@ export class AttendanceComponent implements OnInit {
       const matchesCompany = this.companyFilterId
         ? employee?.companyId === this.companyFilterId
         : true;
-      return matchesSearch && matchesCompany;
+      const matchesStatus = this.statusFilter
+        ? i.status === this.statusFilter
+        : true;
+      return matchesSearch && matchesCompany && matchesStatus;
     });
   }
 
   onSearch() { this.applySearch(); }
+
+  openFilterPanel() {
+    this.pendingCompanyFilterId = this.companyFilterId;
+    this.pendingStatusFilter = this.statusFilter;
+    this.showFilterPanel = true;
+  }
+
+  closeFilterPanel() {
+    this.showFilterPanel = false;
+  }
+
+  togglePendingCompanySelection(companyId: string) {
+    this.pendingCompanyFilterId = this.pendingCompanyFilterId === companyId ? '' : companyId;
+  }
+
+  togglePendingStatusSelection(status: string) {
+    this.pendingStatusFilter = this.pendingStatusFilter === status ? '' : status;
+  }
+
+  applyPendingFilters() {
+    this.companyFilterId = this.pendingCompanyFilterId;
+    this.statusFilter = this.pendingStatusFilter;
+    this.showFilterPanel = false;
+    this.applySearch();
+  }
+
+  resetPendingFilters() {
+    this.pendingCompanyFilterId = '';
+    this.pendingStatusFilter = '';
+  }
+
+  clearCompanyFilter() {
+    this.companyFilterId = '';
+    this.applySearch();
+  }
+
+  clearStatusFilter() {
+    this.statusFilter = '';
+    this.applySearch();
+  }
 
   getEmployeeName(id: string): string {
     const e = this.employees.find(e => e.id === id);
@@ -99,7 +180,7 @@ export class AttendanceComponent implements OnInit {
   }
 
   companyName(id: string): string {
-    return this.companies.find(c => c.id === id)?.name ?? '—';
+    return this.companies.find(c => c.id === id)?.name ?? 'â';
   }
 
   get isSuperAdmin(): boolean {
@@ -109,6 +190,7 @@ export class AttendanceComponent implements OnInit {
   emptyForm() {
     return {
       employeeId: '',
+      departmentId: '',
       date: new Date().toISOString().slice(0, 10),
       status: 'PRESENT',
       workedHours: null,
@@ -124,12 +206,15 @@ export class AttendanceComponent implements OnInit {
     this.editingId = ''; 
     this.error = '';
     this.showModal = true;
+    this.filteredEmployees = [...this.employees]; // Reset filtered employees
     this.cdr.detectChanges(); // Force display
   }
 
   openEdit(item: any) {
+    const employee = this.employees.find(e => e.id === item.employeeId);
     this.form = {
       employeeId: item.employeeId,
+      departmentId: employee?.departmentId || '',
       date: item.date?.slice(0, 10),
       status: item.status,
       workedHours: item.workedHours ?? null,
@@ -137,6 +222,7 @@ export class AttendanceComponent implements OnInit {
       lateMinutes: item.lateMinutes ?? null,
       notes: item.notes ?? ''
     };
+    this.onDepartmentChange(); // Apply department filter
     this.editing = true; 
     this.editingId = item.id; 
     this.error = '';
@@ -155,7 +241,7 @@ export class AttendanceComponent implements OnInit {
     const payload: any = {
       companyId: employee?.companyId ?? this.auth.currentUser()?.companyId,
       employeeId: this.form.employeeId,
-      date: this.form.date,
+      date: this.formatDateToISO(this.form.date),
       status: this.form.status,
     };
 
@@ -207,5 +293,27 @@ export class AttendanceComponent implements OnInit {
       UNPAID_LEAVE: 'badge-secondary', HOLIDAY: 'badge-purple', OTHER: 'badge-secondary'
     };
     return map[s] ?? 'badge-secondary';
+  }
+
+  formatDateToISO(dateString: string): string {
+    // Convert from DD/MM/YYYY to YYYY-MM-DD format
+    if (!dateString) return '';
+    
+    // Check if already in ISO format
+    if (dateString.includes('-')) {
+      return new Date(dateString).toISOString();
+    }
+    
+    // Parse DD/MM/YYYY format
+    const parts = dateString.split('/');
+    if (parts.length === 3) {
+      const day = parts[0].padStart(2, '0');
+      const month = parts[1].padStart(2, '0');
+      const year = parts[2];
+      const isoDate = `${year}-${month}-${day}`;
+      return new Date(isoDate).toISOString();
+    }
+    
+    return new Date(dateString).toISOString();
   }
 }

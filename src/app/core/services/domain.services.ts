@@ -69,6 +69,10 @@ export class EmployeeService {
   constructor(private api: ApiService) {}
   getAll(): Observable<Employee[]>                             { return this.api.get('/employees'); }
   getById(id: string): Observable<Employee>                   { return this.api.get(`/employees/${id}`); }
+  getByDepartments(departmentIds: string[]): Observable<Employee[]> { 
+    const ids = departmentIds.join(',');
+    return this.api.get(`/employees/by-departments?departmentIds=${ids}`);
+  }
   create(data: Partial<Employee>): Observable<Employee>       { return this.api.post('/employees', data); }
   update(id: string, data: Partial<Employee>): Observable<Employee> { return this.api.put(`/employees/${id}`, data); }
   delete(id: string): Observable<any>                         { return this.api.delete(`/employees/${id}`); }
@@ -94,6 +98,8 @@ export class ContractService {
   create(data: Partial<EmployeeContract>): Observable<EmployeeContract>  { return this.api.post('/contracts', data); }
   update(id: string, data: Partial<EmployeeContract>): Observable<EmployeeContract> { return this.api.put(`/contracts/${id}`, data); }
   delete(id: string): Observable<any>                                     { return this.api.delete(`/contracts/${id}`); }
+  generatePdf(id: string): Observable<{message: string; filename: string; path: string}> { return this.api.post(`/contracts/${id}/generate-pdf`, {}); }
+  downloadPdf(filename: string): Observable<Blob> { return this.api.get(`/contracts/pdf/${filename}`, { responseType: 'blob' }); }
 }
 
 @Injectable({ providedIn: 'root' })
@@ -185,5 +191,10 @@ export class SuperAdminService {
     }>;
   }): Observable<{ message: string; data: { company: Company; license: License; users: User[] } }> {
     return this.api.post('/super-admin/companies-with-license-and-users', data);
+  }
+
+  /** Générer un contrat PDF pour une entreprise */
+  generateContract(data: any): Observable<string> {
+    return this.api.post('/super-admin/generate-contract', data, { responseType: 'text' });
   }
 }

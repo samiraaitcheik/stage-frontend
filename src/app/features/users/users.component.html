@@ -17,17 +17,39 @@
 
 <div class="table-container">
   <div class="table-toolbar">
-    <h2>Liste des utilisateurs</h2>
+    <div class="toolbar-heading">
+      <h2>Liste des utilisateurs</h2>
+      <p class="toolbar-subtitle">{{ filtered.length }} résultat{{ filtered.length > 1 ? 's' : '' }}</p>
+    </div>
     <div class="toolbar-actions">
       <div class="search-input">
         <i class="bi bi-search"></i>
         <input type="text" placeholder="Rechercher par nom, email ou rôle..." [(ngModel)]="search" (input)="onSearch()" />
       </div>
-      <select class="form-select filter-select" *ngIf="auth.isSuperAdmin() && companies.length > 0"
-              [(ngModel)]="companyFilterId" (change)="applySearch()">
-        <option value="">Toutes les entreprises</option>
-        <option *ngFor="let company of companies" [value]="company.id">{{ company.name }}</option>
-      </select>
+      <div class="active-filters" *ngIf="companyFilterId || roleFilter || statusFilter">
+        <span class="filter-chip" *ngIf="companyFilterId">
+          <i class="bi bi-building"></i>
+          {{ companyName(companyFilterId) }}
+          <button type="button" class="chip-remove" (click)="clearCompanyFilter()"><i class="bi bi-x"></i></button>
+        </span>
+        <span class="filter-chip" *ngIf="roleFilter">
+          <i class="bi bi-person-badge"></i>
+          {{ roleLabel(roleFilter) }}
+          <button type="button" class="chip-remove" (click)="clearRoleFilter()"><i class="bi bi-x"></i></button>
+        </span>
+        <span class="filter-chip" *ngIf="statusFilter">
+          <i class="bi bi-list-task"></i>
+          {{ statusFilter }}
+          <button type="button" class="chip-remove" (click)="clearStatusFilter()"><i class="bi bi-x"></i></button>
+        </span>
+      </div>
+      <button class="btn-filter" type="button" (click)="openFilterPanel()" [class.active]="showFilterPanel">
+        <i class="bi bi-funnel-fill"></i>
+        <span>Filtrer</span>
+        <span class="filter-badge" *ngIf="companyFilterId || roleFilter || statusFilter">
+          {{ (companyFilterId ? 1 : 0) + (roleFilter ? 1 : 0) + (statusFilter ? 1 : 0) }}
+        </span>
+      </button>
     </div>
   </div>
 
@@ -63,7 +85,10 @@
             <span class="company-badge">{{ item.company?.name || '—' }}</span>
           </td>
           <td>
-            <span class="badge" [ngClass]="roleBadgeClass(item.role)">{{ item.role }}</span>
+            <span class="badge role-badge" [ngClass]="roleBadgeClass(item.role)">
+              <i class="bi" [ngClass]="roleIcon(item.role)"></i>
+              {{ roleLabel(item.role) }}
+            </span>
           </td>
           <td>
             <div class="perm-pills">
@@ -111,6 +136,69 @@
       <h3>Aucun résultat</h3>
       <p>Aucun utilisateur trouvé. Commencez par en ajouter un.</p>
     </div>
+  </div>
+</div>
+
+<div class="filter-panel" *ngIf="showFilterPanel">
+  <div class="filter-panel-header">
+    <div>
+      <h4>Filtres</h4>
+      <p>Choisis une catégorie puis sélectionne tes critères</p>
+    </div>
+    <button class="close-btn" type="button" (click)="closeFilterPanel()"><i class="bi bi-x-lg"></i></button>
+  </div>
+  <div class="filter-tabs">
+    <button type="button" class="filter-tab" [class.active]="activeFilterTab === 'company'" (click)="selectFilterTab('company')">
+      <i class="bi bi-building"></i> Entreprise
+    </button>
+    <button type="button" class="filter-tab" [class.active]="activeFilterTab === 'role'" (click)="selectFilterTab('role')">
+      <i class="bi bi-person-badge"></i> Rôle
+    </button>
+    <button type="button" class="filter-tab" [class.active]="activeFilterTab === 'status'" (click)="selectFilterTab('status')">
+      <i class="bi bi-list-task"></i> Statut
+    </button>
+  </div>
+  <div class="filter-panel-body">
+    <div class="filter-section" *ngIf="activeFilterTab === 'company'">
+      <h5><i class="bi bi-building"></i> Entreprise</h5>
+      <div class="filter-options">
+        <button type="button" class="filter-option" *ngFor="let company of companies" [class.active]="pendingCompanyFilterId === company.id" (click)="togglePendingCompanySelection(company.id)">
+          <i class="bi" [ngClass]="pendingCompanyFilterId === company.id ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+          <span>{{ company.name }}</span>
+        </button>
+      </div>
+    </div>
+    <div class="filter-section" *ngIf="activeFilterTab === 'role'">
+      <h5><i class="bi bi-person-badge"></i> Rôle</h5>
+      <div class="filter-options">
+        <button type="button" class="filter-option" *ngFor="let role of ROLES" [class.active]="pendingRoleFilter === role" (click)="togglePendingRoleSelection(role)">
+          <i class="bi" [ngClass]="pendingRoleFilter === role ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+          <span>{{ roleLabel(role) }}</span>
+        </button>
+      </div>
+    </div>
+    <div class="filter-section" *ngIf="activeFilterTab === 'status'">
+      <h5><i class="bi bi-list-task"></i> Statut</h5>
+      <div class="filter-options">
+        <button type="button" class="filter-option" [class.active]="pendingStatusFilter === 'ACTIVE'" (click)="togglePendingStatusSelection('ACTIVE')">
+          <i class="bi" [ngClass]="pendingStatusFilter === 'ACTIVE' ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+          <span>Actif</span>
+        </button>
+        <button type="button" class="filter-option" [class.active]="pendingStatusFilter === 'INACTIVE'" (click)="togglePendingStatusSelection('INACTIVE')">
+          <i class="bi" [ngClass]="pendingStatusFilter === 'INACTIVE' ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+          <span>Inactif</span>
+        </button>
+        <button type="button" class="filter-option" [class.active]="pendingStatusFilter === 'BLOCKED'" (click)="togglePendingStatusSelection('BLOCKED')">
+          <i class="bi" [ngClass]="pendingStatusFilter === 'BLOCKED' ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+          <span>Bloqué</span>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="filter-panel-footer">
+    <button class="btn btn-secondary" type="button" (click)="resetPendingFilters()">Réinitialiser</button>
+    <button class="btn btn-primary" type="button" (click)="applyPendingFilters()">Appliquer</button>
+    <button class="btn btn-secondary" type="button" (click)="closeFilterPanel()">Fermer</button>
   </div>
 </div>
 

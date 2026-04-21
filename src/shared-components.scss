@@ -207,51 +207,93 @@
 }
 
 /* Form Styles */
-.form-row { 
-  display: grid; 
-  grid-template-columns: 1fr 1fr; 
-  gap: 28px; 
-  margin-bottom: 24px; 
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.form-row.full-width {
+  grid-template-columns: 1fr;
 }
 
 .form-group {
   label {
-    display: block; 
-    font-size: 0.85rem; 
-    font-weight: 600; 
-    color: #334155; 
-    margin-bottom: 8px;
-    letter-spacing: 0.3px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 10px;
+    letter-spacing: 0.15em;
     text-transform: uppercase;
-
-    i { 
-      margin-right: 6px; 
-      opacity: 0.8;
-      color: #4f46e5;
-    }
   }
 
-  input, select {
-    width: 100%; 
-    padding: 12px 14px; 
-    border: 1.5px solid #e2e8f0; 
-    border-radius: 8px; 
-    font-size: 0.95rem;
+  input,
+  select,
+  textarea {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
     background: #ffffff;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    
-    &:hover {
-      border-color: #cbd5e1;
-      box-shadow: 0 2px 8px rgba(79, 70, 229, 0.05);
-    }
-
-    &:focus { 
-      border-color: #4f46e5; 
-      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12), 0 2px 8px rgba(79, 70, 229, 0.1);
-      outline: none;
-      background: #f8fafc;
-    }
+    font-size: 0.95rem;
+    color: #0f172a;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
   }
+
+  input:hover,
+  select:hover,
+  textarea:hover {
+    border-color: #cbd5e1;
+  }
+
+  input:focus,
+  select:focus,
+  textarea:focus {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
+    outline: none;
+    background: #f8fafc;
+    transform: translateY(-1px);
+  }
+
+  textarea {
+    min-height: 120px;
+    resize: vertical;
+  }
+}
+
+.card-panel,
+form,
+.form-card,
+.form-bg,
+.edit-panel,
+.edit-user-panel {
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 22px;
+  box-shadow: 0 22px 60px rgba(15, 23, 42, 0.08);
+  padding: 28px;
+}
+
+.card-panel {
+  margin-bottom: 28px;
+}
+
+.form-card,
+.edit-panel,
+.edit-user-panel {
+  padding: 24px;
+}
+
+form {
+  padding: 24px 0;
+  box-shadow: none;
+  border: none;
 }
 
 /* Tab Styles */

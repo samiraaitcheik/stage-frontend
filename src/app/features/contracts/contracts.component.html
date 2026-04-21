@@ -1,25 +1,53 @@
 <div class="page-header">
   <div>
     <h1>Contrats</h1>
-    <p class="page-subtitle">Gestion des contrats de travail</p>
+    <p class="page-subtitle">Gestion des contrats de travail et de service</p>
   </div>
-  <button class="btn btn-primary" (click)="openCreate()">
-    <i class="bi bi-plus-lg"></i> Ajouter
-  </button>
+  <div class="header-actions">
+
+    <button class="btn btn-primary" (click)="openCreate()">
+      <i class="bi bi-plus-lg"></i> Ajouter contrat employé
+    </button>
+  </div>
 </div>
 
 <div class="table-container">
   <div class="table-toolbar">
-    <h2>Liste des contrats</h2>
+    <div class="toolbar-heading">
+      <h2>Liste des contrats</h2>
+      <p class="toolbar-subtitle">Liste des contrats ({{ filtered.length }})</p>
+    </div>
     <div class="toolbar-actions">
       <div class="search-input">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
         <input type="text" placeholder="Rechercher par employé, type ou statut..." [(ngModel)]="search" (input)="onSearch()" />
       </div>
-      <select class="form-select filter-select" *ngIf="isSuperAdmin && companies.length > 0" [(ngModel)]="companyFilterId" (change)="onSearch()">
-        <option value="">Toutes les entreprises</option>
-        <option *ngFor="let company of companies" [value]="company.id">{{ company.name }}</option>
-      </select>
+      <div class="active-filters" *ngIf="companyFilterId || typeFilter || statusFilter">
+        <div class="filter-chips">
+          <span class="filter-chip" *ngIf="companyFilterId">
+            <i class="bi bi-building"></i>
+            {{ companyName(companyFilterId) }}
+            <button class="chip-remove" type="button" (click)="clearCompanyFilter()"><i class="bi bi-x"></i></button>
+          </span>
+          <span class="filter-chip" *ngIf="typeFilter">
+            <i class="bi bi-tags"></i>
+            {{ typeFilter }}
+            <button class="chip-remove" type="button" (click)="clearTypeFilter()"><i class="bi bi-x"></i></button>
+          </span>
+          <span class="filter-chip" *ngIf="statusFilter">
+            <i class="bi bi-list-task"></i>
+            {{ statusFilter }}
+            <button class="chip-remove" type="button" (click)="clearStatusFilter()"><i class="bi bi-x"></i></button>
+          </span>
+        </div>
+      </div>
+      <button class="btn-filter" *ngIf="isSuperAdmin" (click)="openFilterPanel()" [class.active]="showFilterPanel">
+        <i class="bi bi-funnel-fill"></i>
+        <span>Filtrer</span>
+        <span class="filter-badge" *ngIf="companyFilterId || typeFilter || statusFilter">
+          {{ (companyFilterId ? 1 : 0) + (typeFilter ? 1 : 0) + (statusFilter ? 1 : 0) }}
+        </span>
+      </button>
     </div>
   </div>
     <div *ngIf="loading" class="loading-spinner"></div>
@@ -50,7 +78,8 @@
           <td>{{ item.endDate ? (item.endDate | date:'dd/MM/yyyy') : '—' }}</td>
           <td class="amount-cell">{{ item.baseSalary | number:'1.2-2' }} MAD</td>
           <td>
-            <div class="actions">
+            <div class="actions">                
+              <button class="btn btn-icon btn-info" (click)="generateEmployeeContract(item)" title="G�n�rer contrat PDF"><i class="bi bi-file-earmark-pdf"></i></button>                
               <button class="btn btn-icon btn-secondary" (click)="openEdit(item)" title="Modifier"><i class="bi bi-pencil"></i></button>
               <button class="btn btn-icon btn-danger" (click)="delete(item.id)" title="Supprimer"><i class="bi bi-trash"></i></button>
             </div>
@@ -66,9 +95,50 @@
   </div>
 </div>
 
+<div class="filter-panel" *ngIf="isSuperAdmin && showFilterPanel">
+  <div class="filter-panel-header">
+    <h4>Filtres</h4>
+    <button class="close-btn" type="button" (click)="closeFilterPanel()"><i class="bi bi-x-lg"></i></button>
+  </div>
+  <div class="filter-panel-body">
+    <div class="filter-section">
+      <h5><i class="bi bi-building"></i> Entreprise</h5>
+      <div class="filter-options">
+        <button type="button" class="filter-option" *ngFor="let company of companies" [class.active]="pendingCompanyFilterId === company.id" (click)="togglePendingCompanySelection(company.id)">
+          <i class="bi" [ngClass]="pendingCompanyFilterId === company.id ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+          <span>{{ company.name }}</span>
+        </button>
+      </div>
+    </div>
+    <div class="filter-section">
+      <h5><i class="bi bi-tags"></i> Type</h5>
+      <div class="filter-options">
+        <button type="button" class="filter-option" *ngFor="let type of typeOptions" [class.active]="pendingTypeFilter === type" (click)="togglePendingTypeSelection(type)">
+          <i class="bi" [ngClass]="pendingTypeFilter === type ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+          <span>{{ type }}</span>
+        </button>
+      </div>
+    </div>
+    <div class="filter-section">
+      <h5><i class="bi bi-list-task"></i> Statut</h5>
+      <div class="filter-options">
+        <button type="button" class="filter-option" *ngFor="let status of statusOptions" [class.active]="pendingStatusFilter === status" (click)="togglePendingStatusSelection(status)">
+          <i class="bi" [ngClass]="pendingStatusFilter === status ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+          <span>{{ status }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="filter-panel-footer">
+    <button class="btn btn-secondary" type="button" (click)="resetPendingFilters()">Réinitialiser</button>
+    <button class="btn btn-primary" type="button" (click)="applyPendingFilters()">Appliquer</button>
+    <button class="btn btn-secondary" type="button" (click)="closeFilterPanel()">Fermer</button>
+  </div>
+</div>
+
 <!-- Modal -->
 <div class="modal-overlay" *ngIf="showModal" (click)="close()">
-  <div class="modal modal-lg" (click)="$event.stopPropagation()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h3><i class="bi bi-file-earmark-text-fill" style="color:var(--accent);"></i> {{ editing ? 'Modifier le contrat' : 'Nouveau contrat' }}</h3>
       <button class="btn btn-icon btn-secondary" (click)="close()"><i class="bi bi-x-lg"></i></button>
@@ -76,14 +146,23 @@
     <div class="modal-body">
       <div class="error-msg" *ngIf="error"><i class="bi bi-exclamation-triangle-fill"></i> {{ error }}</div>
 
-      <div class="form-group">
-        <label>Employé <span class="req">*</span></label>
-        <select [(ngModel)]="form.employeeId">
-          <option value="" disabled>-- Sélectionner un employé --</option>
-          <option *ngFor="let e of employees" [value]="e.id">
-            {{ e.firstName }} {{ e.lastName }} {{ e.employeeCode ? '(' + e.employeeCode + ')' : '' }}
-          </option>
-        </select>
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label>Département <i class="bi bi-building"></i></label>
+          <select [(ngModel)]="selectedDepartment" (change)="onDepartmentChange()">
+            <option value="">-- Tous les départements --</option>
+            <option *ngFor="let dept of departments" [value]="dept">{{ dept }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Employé <span class="req">*</span> <i class="bi bi-person"></i></label>
+          <select [(ngModel)]="form.employeeId">
+            <option value="" disabled>-- Sélectionner un employé --</option>
+            <option *ngFor="let e of filteredEmployees" [value]="e.id">
+              {{ e.firstName }} {{ e.lastName }} {{ e.employeeCode ? '(' + e.employeeCode + ')' : '' }}
+            </option>
+          </select>
+        </div>
       </div>
 
       <div class="form-grid-2">
@@ -144,3 +223,112 @@
     </div>
   </div>
 </div>
+ 
+ < ! - -   S e r v i c e   C o n t r a c t   M o d a l   - - > 
+ < d i v   c l a s s = " m o d a l - o v e r l a y "   * n g I f = " s h o w S e r v i c e C o n t r a c t M o d a l "   ( c l i c k ) = " c l o s e S e r v i c e C o n t r a c t M o d a l ( ) " > 
+     < d i v   c l a s s = " m o d a l - b o x "   ( c l i c k ) = " $ e v e n t . s t o p P r o p a g a t i o n ( ) " > 
+         < d i v   c l a s s = " m o d a l - h e a d e r " > 
+             < h 3 > < i   c l a s s = " b i   b i - f i l e - e a r m a r k - p d f "   s t y l e = " c o l o r : v a r ( - - a c c e n t ) ; " > < / i >   G � n � r e r   u n   c o n t r a t   d e   s e r v i c e < / h 3 > 
+             < b u t t o n   c l a s s = " b t n   b t n - i c o n   b t n - s e c o n d a r y "   ( c l i c k ) = " c l o s e S e r v i c e C o n t r a c t M o d a l ( ) " > < i   c l a s s = " b i   b i - x - l g " > < / i > < / b u t t o n > 
+         < / d i v > 
+         < d i v   c l a s s = " m o d a l - b o d y " > 
+             < d i v   c l a s s = " f o r m - g r o u p " > 
+                 < l a b e l > E n t r e p r i s e   < s p a n   c l a s s = " r e q " > * < / s p a n > < / l a b e l > 
+                 < s e l e c t   [ ( n g M o d e l ) ] = " s e l e c t e d C o m p a n y ? . i d "   ( c h a n g e ) = " o n C o m p a n y S e l e c t ( s e l e c t e d C o m p a n y ? . i d ) " > 
+                     < o p t i o n   v a l u e = " "   d i s a b l e d > - -   S � l e c t i o n n e r   u n e   e n t r e p r i s e   - - < / o p t i o n > 
+                     < o p t i o n   * n g F o r = " l e t   c o m p a n y   o f   c o m p a n i e s "   [ v a l u e ] = " c o m p a n y . i d " > 
+                         { {   c o m p a n y . n a m e   } } 
+                     < / o p t i o n > 
+                 < / s e l e c t > 
+             < / d i v > 
+ 
+             < d i v   * n g I f = " s e l e c t e d C o m p a n y "   c l a s s = " c o m p a n y - p r e v i e w " > 
+                 < d i v   c l a s s = " p r e v i e w - h e a d e r " > 
+                     < h 4 > < i   c l a s s = " b i   b i - b u i l d i n g " > < / i >   { {   s e l e c t e d C o m p a n y . n a m e   } } < / h 4 > 
+                     < s p a n   c l a s s = " b a d g e "   [ n g C l a s s ] = " s e l e c t e d C o m p a n y . s t a t u s   = = =   " A C T I V E "   ?   " b a d g e - s u c c e s s "   :   " b a d g e - w a r n i n g " " > 
+                         { {   s e l e c t e d C o m p a n y . s t a t u s   } } 
+                     < / s p a n > 
+                 < / d i v > 
+                 
+                 < d i v   c l a s s = " p r e v i e w - g r i d " > 
+                     < d i v   c l a s s = " p r e v i e w - i t e m " > 
+                         < l a b e l > E m a i l : < / l a b e l > 
+                         < s p a n > { {   s e l e c t e d C o m p a n y . e m a i l   | |   " N / A "   } } < / s p a n > 
+                     < / d i v > 
+                     < d i v   c l a s s = " p r e v i e w - i t e m " > 
+                         < l a b e l > T � l � p h o n e : < / l a b e l > 
+                         < s p a n > { {   s e l e c t e d C o m p a n y . p h o n e   | |   " N / A "   } } < / s p a n > 
+                     < / d i v > 
+                     < d i v   c l a s s = " p r e v i e w - i t e m " > 
+                         < l a b e l > V i l l e : < / l a b e l > 
+                         < s p a n > { {   s e l e c t e d C o m p a n y . c i t y   | |   " N / A "   } } < / s p a n > 
+                     < / d i v > 
+                     < d i v   c l a s s = " p r e v i e w - i t e m " > 
+                         < l a b e l > P a y s : < / l a b e l > 
+                         < s p a n > { {   s e l e c t e d C o m p a n y . c o u n t r y   | |   " M a r o c "   } } < / s p a n > 
+                     < / d i v > 
+                 < / d i v > 
+ 
+                 < d i v   * n g I f = " s e l e c t e d L i c e n s e "   c l a s s = " l i c e n s e - p r e v i e w " > 
+                     < h 5 > < i   c l a s s = " b i   b i - s h i e l d - c h e c k " > < / i >   D � t a i l s   d e   l a   l i c e n c e < / h 5 > 
+                     < d i v   c l a s s = " l i c e n s e - g r i d " > 
+                         < d i v   c l a s s = " l i c e n s e - i t e m " > 
+                             < l a b e l > P l a n : < / l a b e l > 
+                             < s p a n   c l a s s = " b a d g e " > { {   s e l e c t e d L i c e n s e . p l a n C o d e   } } < / s p a n > 
+                         < / d i v > 
+                         < d i v   c l a s s = " l i c e n s e - i t e m " > 
+                             < l a b e l > S t a t u t : < / l a b e l > 
+                             < s p a n   c l a s s = " b a d g e " > { {   s e l e c t e d L i c e n s e . s t a t u s   } } < / s p a n > 
+                         < / d i v > 
+                         < d i v   c l a s s = " l i c e n s e - i t e m " > 
+                             < l a b e l > D � b u t : < / l a b e l > 
+                             < s p a n > { {   s e l e c t e d L i c e n s e . s t a r t s A t   |   d a t e : " d d / M M / y y y y "   } } < / s p a n > 
+                         < / d i v > 
+                         < d i v   c l a s s = " l i c e n s e - i t e m " > 
+                             < l a b e l > F i n : < / l a b e l > 
+                             < s p a n > { {   s e l e c t e d L i c e n s e . e n d s A t   ?   ( s e l e c t e d L i c e n s e . e n d s A t   |   d a t e : " d d / M M / y y y y " )   :   " I l l i m i t � e "   } } < / s p a n > 
+                         < / d i v > 
+                     < / d i v > 
+                     
+                     < d i v   c l a s s = " f e a t u r e s - p r e v i e w " > 
+                         < l a b e l > F o n c t i o n n a l i t � s : < / l a b e l > 
+                         < d i v   c l a s s = " f e a t u r e - t a g s " > 
+                             < s p a n   * n g I f = " s e l e c t e d L i c e n s e . p a y r o l l E n a b l e d "   c l a s s = " f e a t u r e - t a g   a c t i v e " > P a i e < / s p a n > 
+                             < s p a n   * n g I f = " s e l e c t e d L i c e n s e . r h E n a b l e d "   c l a s s = " f e a t u r e - t a g   a c t i v e " > R H < / s p a n > 
+                             < s p a n   * n g I f = " s e l e c t e d L i c e n s e . c n s s E n a b l e d "   c l a s s = " f e a t u r e - t a g   a c t i v e " > C N S S < / s p a n > 
+                             < s p a n   * n g I f = " s e l e c t e d L i c e n s e . t a x E n a b l e d "   c l a s s = " f e a t u r e - t a g   a c t i v e " > F i s c a l < / s p a n > 
+                             < s p a n   * n g I f = " s e l e c t e d L i c e n s e . d a m a n c o m E n a b l e d "   c l a s s = " f e a t u r e - t a g   a c t i v e " > D a m a n c o m < / s p a n > 
+                         < / d i v > 
+                     < / d i v > 
+                 < / d i v > 
+ 
+                 < d i v   * n g I f = " s e l e c t e d C o m p a n y U s e r s . l e n g t h   >   0 "   c l a s s = " u s e r s - p r e v i e w " > 
+                     < h 5 > < i   c l a s s = " b i   b i - p e o p l e " > < / i >   U t i l i s a t e u r s   ( { {   s e l e c t e d C o m p a n y U s e r s . l e n g t h   } } ) < / h 5 > 
+                     < d i v   c l a s s = " u s e r s - l i s t " > 
+                         < d i v   * n g F o r = " l e t   u s e r   o f   s e l e c t e d C o m p a n y U s e r s . s l i c e ( 0 ,   5 ) "   c l a s s = " u s e r - i t e m " > 
+                             < d i v   c l a s s = " u s e r - a v a t a r " > { {   u s e r . f i r s t N a m e ? . [ 0 ]   } } { {   u s e r . l a s t N a m e ? . [ 0 ]   } } < / d i v > 
+                             < d i v   c l a s s = " u s e r - i n f o " > 
+                                 < d i v   c l a s s = " u s e r - n a m e " > { {   u s e r . f i r s t N a m e   } }   { {   u s e r . l a s t N a m e   } } < / d i v > 
+                                 < d i v   c l a s s = " u s e r - e m a i l " > { {   u s e r . e m a i l   } } < / d i v > 
+                                 < s p a n   c l a s s = " b a d g e "   s t y l e = " f o n t - s i z e :   1 1 p x ; " > { {   u s e r . r o l e   } } < / s p a n > 
+                             < / d i v > 
+                         < / d i v > 
+                         < d i v   * n g I f = " s e l e c t e d C o m p a n y U s e r s . l e n g t h   >   5 "   c l a s s = " m o r e - u s e r s " > 
+                             + { {   s e l e c t e d C o m p a n y U s e r s . l e n g t h   -   5   } }   a u t r e s   u t i l i s a t e u r s 
+                         < / d i v > 
+                     < / d i v > 
+                 < / d i v > 
+             < / d i v > 
+         < / d i v > 
+         < d i v   c l a s s = " m o d a l - f o o t e r " > 
+             < b u t t o n   c l a s s = " b t n   b t n - s e c o n d a r y "   ( c l i c k ) = " c l o s e S e r v i c e C o n t r a c t M o d a l ( ) " > 
+                 < i   c l a s s = " b i   b i - x - c i r c l e " > < / i >   A n n u l e r 
+             < / b u t t o n > 
+             < b u t t o n   c l a s s = " b t n   b t n - p r i m a r y "   ( c l i c k ) = " g e n e r a t e S e r v i c e C o n t r a c t ( ) "   [ d i s a b l e d ] = " ! s e l e c t e d C o m p a n y " > 
+                 < i   c l a s s = " b i   b i - f i l e - e a r m a r k - p d f " > < / i >   G � n � r e r   l e   c o n t r a t 
+             < / b u t t o n > 
+         < / d i v > 
+     < / d i v > 
+ < / d i v > 
+ 
+ 

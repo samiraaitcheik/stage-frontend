@@ -10,16 +10,31 @@
 
 <div class="table-container">
   <div class="table-toolbar">
-    <h2>Employés</h2>
+    <div class="toolbar-heading">
+      <h2>Employés</h2>
+      <p class="toolbar-subtitle">Liste des employés ({{ filtered.length }})</p>
+    </div>
     <div class="toolbar-actions">
       <div class="search-input">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
         <input type="text" placeholder="Rechercher..." [(ngModel)]="search" (input)="onSearch()" />
       </div>
-      <select class="form-select filter-select" *ngIf="isSuperAdmin && companies.length > 0" [(ngModel)]="companyFilterId" (change)="applyFilters()">
-        <option value="">Toutes les entreprises</option>
-        <option *ngFor="let company of companies" [value]="company.id">{{ company.name }}</option>
-      </select>
+      <div class="active-filters" *ngIf="companyFilterId">
+        <div class="filter-chips">
+          <span class="filter-chip">
+            <i class="bi bi-building"></i>
+            {{ companyName(companyFilterId) }}
+            <button class="chip-remove" type="button" (click)="clearCompanyFilter()">
+              <i class="bi bi-x"></i>
+            </button>
+          </span>
+        </div>
+      </div>
+      <button class="btn-filter" *ngIf="isSuperAdmin" (click)="openFilterPanel()" [class.active]="showFilterPanel">
+        <i class="bi bi-funnel-fill"></i>
+        <span>Filtrer</span>
+        <span class="filter-badge" *ngIf="companyFilterId">1</span>
+      </button>
     </div>
   </div>
 
@@ -78,8 +93,35 @@
   </div>
 </div>
 
+<div class="filter-panel" *ngIf="isSuperAdmin && showFilterPanel">
+  <div class="filter-panel-header">
+    <h4>Filtres</h4>
+    <button class="close-btn" type="button" (click)="closeFilterPanel()"><i class="bi bi-x-lg"></i></button>
+  </div>
+  <div class="filter-panel-body">
+    <div class="filter-section">
+      <h5><i class="bi bi-building"></i> Entreprise</h5>
+      <div class="filter-options">
+        <button type="button"
+                class="filter-option"
+                *ngFor="let company of companies"
+                [class.active]="isPendingCompanySelected(company.id)"
+                (click)="togglePendingCompanySelection(company.id)">
+          <i class="bi" [ngClass]="isPendingCompanySelected(company.id) ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+          <span>{{ company.name }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="filter-panel-footer">
+    <button class="btn btn-secondary" type="button" (click)="resetPendingFilters()">Réinitialiser</button>
+    <button class="btn btn-primary" type="button" (click)="applyPendingFilters()">Appliquer</button>
+    <button class="btn btn-secondary" type="button" (click)="closeFilterPanel()">Fermer</button>
+  </div>
+</div>
+
 <div class="modal-overlay" *ngIf="showModal" (click)="close()">
-  <div class="modal modal-lg show" (click)="$event.stopPropagation()">
+  <div class="modal-content-custom" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h3>
         <i class="bi bi-person-badge"></i>

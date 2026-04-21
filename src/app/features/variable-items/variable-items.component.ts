@@ -20,10 +20,16 @@ export class VariableItemsComponent implements OnInit {
   periods: any[] = [];
   loading = true;
   showModal = false;
+  showFilterPanel = false;
   editing = false;
   editingId = '';
   search = '';
   companyFilterId = '';
+  pendingCompanyFilterId = '';
+  typeFilter = '';
+  pendingTypeFilter = '';
+  statusFilter = '';
+  pendingStatusFilter = '';
   error = '';
 
   readonly typeOptions = VARIABLE_ITEM_TYPE_OPTIONS;
@@ -82,15 +88,77 @@ export class VariableItemsComponent implements OnInit {
       const matchesCompany = this.companyFilterId
         ? employee?.companyId === this.companyFilterId
         : true;
-      return matchesSearch && matchesCompany;
+      const matchesType = this.typeFilter
+        ? i.type === this.typeFilter
+        : true;
+      const matchesStatus = this.statusFilter
+        ? i.status === this.statusFilter
+        : true;
+      return matchesSearch && matchesCompany && matchesType && matchesStatus;
     });
   }
 
   onSearch() { this.applySearch(); }
 
+  openFilterPanel() {
+    this.pendingCompanyFilterId = this.companyFilterId;
+    this.pendingTypeFilter = this.typeFilter;
+    this.pendingStatusFilter = this.statusFilter;
+    this.showFilterPanel = true;
+  }
+
+  closeFilterPanel() {
+    this.showFilterPanel = false;
+  }
+
+  togglePendingCompanySelection(companyId: string) {
+    this.pendingCompanyFilterId = this.pendingCompanyFilterId === companyId ? '' : companyId;
+  }
+
+  togglePendingTypeSelection(type: string) {
+    this.pendingTypeFilter = this.pendingTypeFilter === type ? '' : type;
+  }
+
+  togglePendingStatusSelection(status: string) {
+    this.pendingStatusFilter = this.pendingStatusFilter === status ? '' : status;
+  }
+
+  applyPendingFilters() {
+    this.companyFilterId = this.pendingCompanyFilterId;
+    this.typeFilter = this.pendingTypeFilter;
+    this.statusFilter = this.pendingStatusFilter;
+    this.showFilterPanel = false;
+    this.applySearch();
+  }
+
+  resetPendingFilters() {
+    this.pendingCompanyFilterId = '';
+    this.pendingTypeFilter = '';
+    this.pendingStatusFilter = '';
+  }
+
+  clearCompanyFilter() {
+    this.companyFilterId = '';
+    this.applySearch();
+  }
+
+  clearTypeFilter() {
+    this.typeFilter = '';
+    this.applySearch();
+  }
+
+  clearStatusFilter() {
+    this.statusFilter = '';
+    this.applySearch();
+  }
+
   getEmployeeName(id: string): string {
     const e = this.employees.find(e => e.id === id);
     return e ? `${e.firstName} ${e.lastName}` : id;
+  }
+
+  companyName(id: string): string {
+    return this.companies.find(c => c.id === id)?.name ?? '—';
   }
 
   get isSuperAdmin(): boolean {

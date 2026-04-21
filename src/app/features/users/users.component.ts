@@ -49,9 +49,16 @@ export class UsersComponent implements OnInit {
   editingId = '';
   search = '';
   companyFilterId = '';
+  roleFilter = '';
+  statusFilter = '';
+  showFilterPanel = false;
+  pendingCompanyFilterId = '';
+  pendingRoleFilter = '';
+  pendingStatusFilter = '';
   error = '';
   showPassword = false;
   queryCompanyId = '';
+  activeFilterTab = 'company';
   toast = '';
   toastTimer: any;
 
@@ -85,6 +92,20 @@ export class UsersComponent implements OnInit {
         this.queryCompanyId = companyId;
         this.openCreate();
       }
+
+      const editUserId = params.get('userId');
+      if (editUserId) {
+        this.service.getById(editUserId).subscribe({
+          next: (user) => {
+            const permissions = Array.isArray((user as any).permissions) ? [...(user as any).permissions] : [];
+            this.openEdit({
+              ...user,
+              permissions
+            });
+          },
+          error: () => {}
+        });
+      }
     });
   }
 
@@ -103,19 +124,62 @@ export class UsersComponent implements OnInit {
   load() {
     this.loading = true;
     this.error = '';
+    console.log('Starting to load users...');
+    
     this.service.getAll().subscribe({
       next: (data) => { 
-        this.items = data; 
+        console.log('Users API response:', data);
+        this.items = Array.isArray(data) ? data : []; 
+        this.filtered = [...this.items];
         this.applySearch(); 
         this.loading = false; 
-        console.log('Users loaded:', data);
+        console.log('Users loaded successfully:', this.items.length, 'items');
       },
       error: (err) => { 
-        this.loading = false;
-        this.error = err?.error?.error || err?.message || 'Erreur lors du chargement des utilisateurs';
         console.error('Error loading users:', err);
+        this.loading = false;
+        this.items = [];
+        this.filtered = [];
+        this.error = err?.error?.error || err?.message || 'Erreur lors du chargement des utilisateurs';
+        
+        // Try alternative endpoint if main one fails
+        if (err?.status === 404 || err?.status === 500) {
+          console.log('Trying fallback endpoint...');
+          this.fallbackLoadUsers();
+        }
       }
     });
+  }
+
+  fallbackLoadUsers() {
+    // Try loading from companies endpoint as fallback
+    if (this.auth.isSuperAdmin()) {
+      this.companyService.getAll().subscribe({
+        next: (companies) => {
+          console.log('Companies loaded as fallback:', companies);
+          // Extract users from companies if available
+          const allUsers: any[] = [];
+          companies.forEach((company: any) => {
+            if (company.users && Array.isArray(company.users)) {
+              allUsers.push(...company.users.map((user: any) => ({ ...user, company })));
+            }
+          });
+          this.items = allUsers;
+          this.filtered = [...this.items];
+          this.loading = false;
+          this.error = '';
+          console.log('Users loaded from companies fallback:', this.items.length, 'items');
+        },
+        error: (err) => {
+          console.error('Fallback also failed:', err);
+          this.loading = false;
+          this.error = 'Impossible de charger les utilisateurs. Veuillez contacter l\'administrateur.';
+        }
+      });
+    } else {
+      this.loading = false;
+      this.error = 'Aucune donnée disponible. Veuillez contacter l\'administrateur.';
+    }
   }
 
   applySearch() {
@@ -127,11 +191,73 @@ export class UsersComponent implements OnInit {
             .toLowerCase().includes(q)
         : true;
       const matchesCompany = this.companyFilterId ? companyId === this.companyFilterId : true;
-      return matchesSearch && matchesCompany;
+      const matchesRole = this.roleFilter ? item.role === this.roleFilter : true;
+      const matchesStatus = this.statusFilter ? item.status === this.statusFilter : true;
+      return matchesSearch && matchesCompany && matchesRole && matchesStatus;
     });
   }
 
   onSearch() { this.applySearch(); }
+
+  openFilterPanel() {
+    this.pendingCompanyFilterId = this.companyFilterId;
+    this.pendingRoleFilter = this.roleFilter;
+    this.pendingStatusFilter = this.statusFilter;
+    this.showFilterPanel = true;
+  }
+
+  closeFilterPanel() {
+    this.showFilterPanel = false;
+  }
+
+  togglePendingCompanySelection(companyId: string) {
+    this.pendingCompanyFilterId = this.pendingCompanyFilterId === companyId ? '' : companyId;
+  }
+
+  togglePendingRoleSelection(role: string) {
+    this.pendingRoleFilter = this.pendingRoleFilter === role ? '' : role;
+  }
+
+  togglePendingStatusSelection(status: string) {
+    this.pendingStatusFilter = this.pendingStatusFilter === status ? '' : status;
+  }
+
+  applyPendingFilters() {
+    this.companyFilterId = this.pendingCompanyFilterId;
+    this.roleFilter = this.pendingRoleFilter;
+    this.statusFilter = this.pendingStatusFilter;
+    this.applySearch();
+    this.showFilterPanel = false;
+  }
+
+  resetPendingFilters() {
+    this.pendingCompanyFilterId = '';
+    this.pendingRoleFilter = '';
+    this.pendingStatusFilter = '';
+  }
+
+  selectFilterTab(tab: string) {
+    this.activeFilterTab = tab;
+  }
+
+  clearCompanyFilter() {
+    this.companyFilterId = '';
+    this.applySearch();
+  }
+
+  clearRoleFilter() {
+    this.roleFilter = '';
+    this.applySearch();
+  }
+
+  clearStatusFilter() {
+    this.statusFilter = '';
+    this.applySearch();
+  }
+
+  companyName(companyId: string): string {
+    return this.companies.find(c => c.id === companyId)?.name || '—';
+  }
 
   openCreate() {
     this.form = this.emptyForm();
@@ -283,10 +409,38 @@ export class UsersComponent implements OnInit {
 
   roleBadgeClass(role: string): string {
     const map: Record<string, string> = {
-      ADMIN: 'badge-admin', RH: 'badge-rh',
-      MANAGER: 'badge-manager', VIEWER: 'badge-viewer', CUSTOM: 'badge-custom'
+      SUPER_ADMIN: 'badge-super-admin',
+      ADMIN: 'badge-admin',
+      HR_MANAGER: 'badge-hr',
+      PAYROLL_MANAGER: 'badge-payroll',
+      EMPLOYEE: 'badge-employee',
+      VIEWER: 'badge-viewer',
     };
     return map[role] ?? 'badge-custom';
+  }
+
+  roleLabel(role: string): string {
+    const labels: Record<string, string> = {
+      SUPER_ADMIN: 'Super admin',
+      ADMIN: 'Admin',
+      HR_MANAGER: 'RH',
+      PAYROLL_MANAGER: 'Paie',
+      EMPLOYEE: 'Employé',
+      VIEWER: 'Lecteur',
+    };
+    return (labels[role] ?? role) || '—';
+  }
+
+  roleIcon(role: string): string {
+    const icons: Record<string, string> = {
+      SUPER_ADMIN: 'bi-shield-lock',
+      ADMIN: 'bi-person-badge',
+      HR_MANAGER: 'bi-people',
+      PAYROLL_MANAGER: 'bi-cash-stack',
+      EMPLOYEE: 'bi-person',
+      VIEWER: 'bi-eye',
+    };
+    return icons[role] ?? 'bi-person-fill';
   }
 
   get currentCompanyName(): string {

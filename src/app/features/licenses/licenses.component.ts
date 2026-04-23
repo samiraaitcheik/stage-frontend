@@ -85,8 +85,52 @@ export class LicensesComponent implements OnInit {
   load() {
     this.loading = true;
     this.service.getAll().subscribe({
-      next: (data) => { this.items = data; this.applyFilters(); this.loading = false; },
+      next: (data) => { 
+        this.items = this.updateExpiredLicenses(data); 
+        this.applyFilters(); 
+        this.loading = false; 
+      },
       error: () => { this.loading = false; }
+    });
+  }
+
+  /**
+   * Vérifie et met à jour le statut des licences expirées
+   */
+  private updateExpiredLicenses(licenses: License[]): License[] {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Début de la journée pour comparaison
+    
+    return licenses.map(license => {
+      // Si la licence a une date de fin et n'est pas déjà expirée
+      if (license.endsAt && license.status !== 'EXPIRED' && license.status !== 'CANCELLED') {
+        const endDate = new Date(license.endsAt);
+        endDate.setHours(0, 0, 0, 0); // Début de la journée pour comparaison
+        
+        // Si la date de fin est avant aujourd'hui
+        if (endDate < today) {
+          // Mettre à jour le statut côté backend
+          this.updateLicenseStatus(license.id, 'EXPIRED');
+          
+          // Retourner la licence avec le statut mis à jour pour l'affichage
+          return { ...license, status: 'EXPIRED' };
+        }
+      }
+      return license;
+    });
+  }
+
+  /**
+   * Met à jour le statut d'une licence dans la base de données
+   */
+  private updateLicenseStatus(licenseId: string, newStatus: LicenseStatus) {
+    this.service.update(licenseId, { status: newStatus }).subscribe({
+      next: () => {
+        console.log(`Licence ${licenseId} mise à jour: ${newStatus}`);
+      },
+      error: (err) => {
+        console.error(`Erreur lors de la mise à jour de la licence ${licenseId}:`, err);
+      }
     });
   }
 
@@ -185,7 +229,10 @@ export class LicensesComponent implements OnInit {
     this.errors = validateRequired(this.form, ['companyId', 'planCode', 'startsAt']);
     if (Object.keys(this.errors).length) return;
 
-    const next = () => { this.showModal = false; this.load(); };
+    const next = () => { 
+      this.showModal = false; 
+      this.load(); // Recharge avec vérification des licences expirées
+    };
     const error = (e: any) => { this.errors['api'] = e?.error?.error || 'Erreur serveur'; };
 
     if (this.editing) {

@@ -55,6 +55,9 @@ export class DepartmentsComponent implements OnInit {
   }
 
   ngOnInit() {
+
+    const departments = this.service.getAll();
+    console.log(departments);
     forkJoin({
       departments: this.service.getAll(),
       companies:   this.companyService.getAll(),

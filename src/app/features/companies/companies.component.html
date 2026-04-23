@@ -5,11 +5,9 @@
   </div>
   <button class="btn btn-primary" (click)="openCreate()" *ngIf="isSuperAdmin">
     <svg viewBox="0 0 20 20" fill="currentColor" width="16">
-      <path
-        fill-rule="evenodd"
+      <path fill-rule="evenodd"
         d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-        clip-rule="evenodd"
-      />
+        clip-rule="evenodd" />
     </svg>
     Ajouter
   </button>
@@ -28,11 +26,7 @@
         <i class="bi bi-search"></i>
         <input type="text" placeholder="Rechercher..." [(ngModel)]="search" (input)="onSearch()" />
       </div>
-      <!-- Active Filters Display -->
-      <div
-        class="active-filters"
-        *ngIf="selectedCompanyIds.length > 0 || selectedStatuses.length > 0"
-      >
+      <div class="active-filters" *ngIf="selectedCompanyIds.length > 0 || selectedStatuses.length > 0">
         <div class="filter-chips">
           <span class="filter-chip" *ngFor="let companyId of selectedCompanyIds">
             <i class="bi bi-building"></i>
@@ -50,12 +44,7 @@
           </span>
         </div>
       </div>
-      <button
-        class="btn-filter"
-        *ngIf="isSuperAdmin"
-        (click)="openFilterPanel()"
-        [class.active]="showFilterPanel"
-      >
+      <button class="btn-filter" *ngIf="isSuperAdmin" (click)="openFilterPanel()" [class.active]="showFilterPanel">
         <i class="bi bi-funnel-fill"></i>
         <span>Filtrer</span>
         <span class="filter-badge" *ngIf="selectedCompanyIds.length + selectedStatuses.length > 0">
@@ -63,87 +52,52 @@
         </span>
       </button>
     </div>
-    <div class="filter-panel" *ngIf="isSuperAdmin && showFilterPanel">
-      <div class="filter-panel-header">
-        <h4>Filtres</h4>
-        <button class="close-btn" (click)="showFilterPanel = false">
-          <i class="bi bi-x-lg"></i>
-        </button>
-      </div>
-      <div class="filter-tabs">
-        <button
-          class="filter-tab"
-          [class.active]="filterPanelTab === 'company'"
-          (click)="setFilterPanelTab('company')"
-        >
-          Entreprise
-        </button>
-        <button
-          class="filter-tab"
-          [class.active]="filterPanelTab === 'status'"
-          (click)="setFilterPanelTab('status')"
-        >
-          Statut
-        </button>
-      </div>
-      <div class="filter-panel-body">
-        <div class="filter-section" *ngIf="filterPanelTab === 'company'">
-          <h5><i class="bi bi-building"></i> Entreprise</h5>
-          <div class="filter-options">
-            <button
-              class="filter-option"
-              *ngFor="let item of items"
-              [class.active]="isPendingCompanySelected(item.id)"
-              (click)="togglePendingCompanySelection(item.id)"
-            >
-              <i
-                class="bi"
-                [ngClass]="isPendingCompanySelected(item.id) ? 'bi-check-circle-fill' : 'bi-circle'"
-              ></i>
-              <span>{{ item.name }}</span>
-            </button>
-          </div>
-        </div>
-        <div class="filter-section" *ngIf="filterPanelTab === 'status'">
-          <h5><i class="bi bi-tag"></i> Statut</h5>
-          <div class="filter-options">
-            <button
-              class="filter-option"
-              *ngFor="let status of statusOptions"
-              [class.active]="isPendingStatusSelected(status)"
-              (click)="togglePendingStatusSelection(status)"
-            >
-              <i
-                class="bi"
-                [ngClass]="isPendingStatusSelected(status) ? 'bi-check-circle-fill' : 'bi-circle'"
-              ></i>
-              <i
-                class="bi badge-icon"
-                [ngClass]="
-                  status === 'ACTIVE'
-                    ? 'bi-check-circle-fill'
-                    : status === 'INACTIVE'
-                      ? 'bi-dash-circle-fill'
-                      : 'bi-exclamation-circle-fill'
-                "
-                [style.color]="
-                  status === 'ACTIVE' ? '#16a34a' : status === 'INACTIVE' ? '#f59e0b' : '#dc2626'
-                "
-              ></i>
-              <span>{{ status }}</span>
-            </button>
-          </div>
+  </div>
+
+  <!-- Filter Panel -->
+  <div class="filter-panel" *ngIf="isSuperAdmin && showFilterPanel">
+    <div class="filter-panel-header">
+      <h4>Filtres</h4>
+      <button class="close-btn" (click)="showFilterPanel = false">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <div class="filter-tabs">
+      <button class="filter-tab" [class.active]="filterPanelTab === 'company'" (click)="setFilterPanelTab('company')">
+        Entreprise
+      </button>
+      <button class="filter-tab" [class.active]="filterPanelTab === 'status'" (click)="setFilterPanelTab('status')">
+        Statut
+      </button>
+    </div>
+    <div class="filter-panel-body">
+      <div class="filter-section" *ngIf="filterPanelTab === 'company'">
+        <h5><i class="bi bi-building"></i> Entreprise</h5>
+        <div class="filter-options">
+          <button class="filter-option" *ngFor="let item of items"
+            [class.active]="isPendingCompanySelected(item.id)"
+            (click)="togglePendingCompanySelection(item.id)">
+            <i class="bi" [ngClass]="isPendingCompanySelected(item.id) ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+            <span>{{ item.name }}</span>
+          </button>
         </div>
       </div>
-      <div class="filter-panel-footer">
-        <button class="btn btn-secondary" type="button" (click)="resetPendingFilters()">
-          Réinitialiser
-        </button>
-        <button class="btn btn-primary" type="button" (click)="applyPendingFilters()">
-          Appliquer
-        </button>
-        <button class="btn btn-secondary" type="button" (click)="closeFilterPanel()">Fermer</button>
+      <div class="filter-section" *ngIf="filterPanelTab === 'status'">
+        <h5><i class="bi bi-tag"></i> Statut</h5>
+        <div class="filter-options">
+          <button class="filter-option" *ngFor="let status of statusOptions"
+            [class.active]="isPendingStatusSelected(status)"
+            (click)="togglePendingStatusSelection(status)">
+            <i class="bi" [ngClass]="isPendingStatusSelected(status) ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+            <span>{{ status }}</span>
+          </button>
+        </div>
       </div>
+    </div>
+    <div class="filter-panel-footer">
+      <button class="btn btn-secondary" type="button" (click)="resetPendingFilters()">Réinitialiser</button>
+      <button class="btn btn-primary" type="button" (click)="applyPendingFilters()">Appliquer</button>
+      <button class="btn btn-secondary" type="button" (click)="closeFilterPanel()">Fermer</button>
     </div>
   </div>
 
@@ -165,33 +119,23 @@
       </thead>
       <tbody>
         <tr *ngFor="let item of filtered">
-          <td>
-            <strong>{{ item.name }}</strong>
-          </td>
+          <td><strong>{{ item.name }}</strong></td>
           <td>{{ item.legalName || '—' }}</td>
           <td>{{ item.city || '—' }}</td>
           <td>{{ item.phone || '—' }}</td>
           <td>{{ item.email || '—' }}</td>
+          <td><span class="badge badge-default">{{ item.currency || 'MAD' }}</span></td>
           <td>
-            <span class="badge badge-default">{{ item.currency || 'MAD' }}</span>
-          </td>
-          <td>
-            <span
-              class="badge"
+            <span class="badge"
               [class.badge-success]="item.status === 'ACTIVE'"
               [class.badge-warning]="item.status === 'INACTIVE'"
-              [class.badge-danger]="item.status === 'SUSPENDED'"
-            >
+              [class.badge-danger]="item.status === 'SUSPENDED'">
               {{ item.status }}
             </span>
           </td>
           <td>
             <div class="actions">
-              <button
-                class="btn btn-icon btn-secondary"
-                (click)="viewDetails(item)"
-                title="Détails"
-              >
+              <button class="btn btn-icon btn-secondary" (click)="viewDetails(item)" title="Détails">
                 <i class="bi bi-eye"></i>
               </button>
               <button class="btn btn-icon btn-secondary" (click)="openEdit(item)" title="Modifier">
@@ -218,17 +162,18 @@
   </div>
 </div>
 
+<!-- =====================================================================
+     CREATE / EDIT MODAL
+     ===================================================================== -->
 <div class="modal-overlay" *ngIf="showModal" (click)="close()">
   <div class="custom-modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h3>{{ editing ? 'Modifier' : 'Nouvelle' }} entreprise</h3>
       <button class="close-btn" (click)="close()">
         <svg viewBox="0 0 20 20" fill="currentColor" width="20">
-          <path
-            fill-rule="evenodd"
+          <path fill-rule="evenodd"
             d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-            clip-rule="evenodd"
-          />
+            clip-rule="evenodd" />
         </svg>
       </button>
     </div>
@@ -236,6 +181,7 @@
     <div class="modal-body">
       <div class="api-error" *ngIf="errors['api']">{{ errors['api'] }}</div>
 
+      <!-- ── CREATE MODE ── -->
       <div *ngIf="!editing">
         <div class="form-step-title company-section" style="margin-top: 0">
           <i class="bi bi-building"></i> Entreprise
@@ -243,132 +189,69 @@
         <div class="form-row">
           <div class="form-group" [class.has-error]="hasError('company.name')">
             <label>Nom commercial <span class="required">*</span></label>
-            <input
-              type="text"
-              name="companyName"
-              [(ngModel)]="combinedForm.company.name"
-              placeholder="Ex: HRMatrix SARL"
-            />
-            <span class="field-error" *ngIf="hasError('company.name')">{{
-              errors['company.name']
-            }}</span>
+            <input type="text" [(ngModel)]="combinedForm.company.name" placeholder="Ex: HRMatrix SARL" />
+            <span class="field-error" *ngIf="hasError('company.name')">{{ errors['company.name'] }}</span>
           </div>
           <div class="form-group">
             <label>Raison sociale</label>
-            <input
-              type="text"
-              name="companyLegalName"
-              [(ngModel)]="combinedForm.company.legalName"
-              placeholder="Ex: HRMatrix Société"
-            />
+            <input type="text" [(ngModel)]="combinedForm.company.legalName" placeholder="Ex: HRMatrix Société" />
           </div>
         </div>
-
         <div class="form-row">
           <div class="form-group">
             <label>Identifiant fiscal (IF)</label>
-            <input
-              type="text"
-              name="companyTaxIdentifier"
-              [(ngModel)]="combinedForm.company.taxIdentifier"
-              placeholder="Ex: 12345678"
-            />
+            <input type="text" [(ngModel)]="combinedForm.company.taxIdentifier" placeholder="Ex: 12345678" />
           </div>
           <div class="form-group">
             <label>Numéro RC</label>
-            <input
-              type="text"
-              name="companyRcNumber"
-              [(ngModel)]="combinedForm.company.rcNumber"
-              placeholder="Ex: 123456"
-            />
+            <input type="text" [(ngModel)]="combinedForm.company.rcNumber" placeholder="Ex: 123456" />
           </div>
         </div>
-
         <div class="form-row">
           <div class="form-group">
             <label>Numéro ICE</label>
-            <input
-              type="text"
-              name="companyIceNumber"
-              [(ngModel)]="combinedForm.company.iceNumber"
-              placeholder="Ex: 001234567000012"
-            />
+            <input type="text" [(ngModel)]="combinedForm.company.iceNumber" placeholder="Ex: 001234567000012" />
           </div>
           <div class="form-group">
             <label>Numéro CNSS</label>
-            <input
-              type="text"
-              name="companyCnssNumber"
-              [(ngModel)]="combinedForm.company.cnssNumber"
-              placeholder="Ex: 1234567"
-            />
+            <input type="text" [(ngModel)]="combinedForm.company.cnssNumber" placeholder="Ex: 1234567" />
           </div>
         </div>
-
         <div class="form-row">
           <div class="form-group">
             <label>Email</label>
-            <input
-              type="email"
-              name="companyEmail"
-              [(ngModel)]="combinedForm.company.email"
-              placeholder="contact@entreprise.ma"
-            />
+            <input type="email" [(ngModel)]="combinedForm.company.email" placeholder="contact@entreprise.ma" />
           </div>
           <div class="form-group">
             <label>Téléphone</label>
-            <input
-              type="tel"
-              name="companyPhone"
-              [(ngModel)]="combinedForm.company.phone"
-              placeholder="+212 5XX XXX XXX"
-            />
+            <input type="tel" [(ngModel)]="combinedForm.company.phone" placeholder="+212 5XX XXX XXX" />
           </div>
         </div>
-
         <div class="form-group">
           <label>Adresse</label>
-          <input
-            type="text"
-            name="companyAddress"
-            [(ngModel)]="combinedForm.company.address"
-            placeholder="N° rue, quartier..."
-          />
+          <input type="text" [(ngModel)]="combinedForm.company.address" placeholder="N° rue, quartier..." />
         </div>
-
         <div class="form-row">
           <div class="form-group">
             <label>Ville</label>
-            <input
-              type="text"
-              name="companyCity"
-              [(ngModel)]="combinedForm.company.city"
-              placeholder="Ex: Casablanca"
-            />
+            <input type="text" [(ngModel)]="combinedForm.company.city" placeholder="Ex: Casablanca" />
           </div>
           <div class="form-group">
             <label>Pays</label>
-            <input
-              type="text"
-              name="companyCountry"
-              [(ngModel)]="combinedForm.company.country"
-              placeholder="Maroc"
-            />
+            <input type="text" [(ngModel)]="combinedForm.company.country" placeholder="Maroc" />
           </div>
         </div>
-
         <div class="form-row">
           <div class="form-group">
             <label>Devise</label>
-            <select name="companyCurrency" [(ngModel)]="combinedForm.company.currency">
+            <select [(ngModel)]="combinedForm.company.currency">
               <option value="MAD">MAD — Dirham marocain</option>
               <option value="EUR">EUR — Euro</option>
             </select>
           </div>
           <div class="form-group">
             <label>Statut</label>
-            <select name="companyStatus" [(ngModel)]="combinedForm.company.status">
+            <select [(ngModel)]="combinedForm.company.status">
               <option *ngFor="let s of statusOptions" [value]="s">{{ s }}</option>
             </select>
           </div>
@@ -378,151 +261,88 @@
         <div class="form-row">
           <div class="form-group" [class.has-error]="hasError('license.planCode')">
             <label>Plan <span class="required">*</span></label>
-            <select name="licensePlanCode" [(ngModel)]="combinedForm.license.planCode">
+            <select [(ngModel)]="combinedForm.license.planCode">
               <option *ngFor="let p of planOptions" [value]="p">{{ p }}</option>
             </select>
-            <span class="field-error" *ngIf="hasError('license.planCode')">{{
-              errors['license.planCode']
-            }}</span>
+            <span class="field-error" *ngIf="hasError('license.planCode')">{{ errors['license.planCode'] }}</span>
           </div>
           <div class="form-group">
             <label>Statut</label>
-            <select name="licenseStatus" [(ngModel)]="combinedForm.license.status">
+            <select [(ngModel)]="combinedForm.license.status">
               <option *ngFor="let s of licenseStatusOptions" [value]="s">{{ s }}</option>
             </select>
           </div>
         </div>
-
         <div class="form-row">
           <div class="form-group">
             <label>Cycle de facturation</label>
-            <select name="licenseBillingCycle" [(ngModel)]="combinedForm.license.billingCycle">
+            <select [(ngModel)]="combinedForm.license.billingCycle">
               <option *ngFor="let b of billingOptions" [value]="b">{{ b }}</option>
             </select>
           </div>
           <div class="form-group" [class.has-error]="hasError('license.startsAt')">
             <label>Date de début <span class="required">*</span></label>
-            <input type="date" name="licenseStartsAt" [(ngModel)]="combinedForm.license.startsAt" />
-            <span class="field-error" *ngIf="hasError('license.startsAt')">{{
-              errors['license.startsAt']
-            }}</span>
+            <input type="date" [(ngModel)]="combinedForm.license.startsAt" />
+            <span class="field-error" *ngIf="hasError('license.startsAt')">{{ errors['license.startsAt'] }}</span>
           </div>
           <div class="form-group">
             <label>Date de fin</label>
-            <input type="date" name="licenseEndsAt" [(ngModel)]="combinedForm.license.endsAt" />
+            <input type="date" [(ngModel)]="combinedForm.license.endsAt" />
           </div>
         </div>
-
         <div class="form-row">
           <div class="form-group">
             <label>Max utilisateurs</label>
-            <input
-              type="number"
-              name="licenseMaxUsers"
-              [(ngModel)]="combinedForm.license.maxUsers"
-              placeholder="Illimité"
-              min="1"
-            />
+            <input type="number" [(ngModel)]="combinedForm.license.maxUsers" placeholder="Illimité" min="1" />
           </div>
           <div class="form-group">
             <label>Max employés</label>
-            <input
-              type="number"
-              name="licenseMaxEmployees"
-              [(ngModel)]="combinedForm.license.maxEmployees"
-              placeholder="Illimité"
-              min="1"
-            />
+            <input type="number" [(ngModel)]="combinedForm.license.maxEmployees" placeholder="Illimité" min="1" />
           </div>
           <div class="form-group">
             <label>Max stockage (Mo)</label>
-            <input
-              type="number"
-              name="licenseMaxStorageMb"
-              [(ngModel)]="combinedForm.license.maxStorageMb"
-              placeholder="Illimité"
-              min="1"
-            />
+            <input type="number" [(ngModel)]="combinedForm.license.maxStorageMb" placeholder="Illimité" min="1" />
           </div>
         </div>
-
 
         <div class="form-step-title user-section"><i class="bi bi-people"></i> Utilisateurs</div>
         <div class="api-error" *ngIf="errors['users']">{{ errors['users'] }}</div>
         <div *ngFor="let user of combinedForm.users; let i = index" class="user-card">
           <div class="user-header">
             <h5>Utilisateur {{ i + 1 }}</h5>
-            <button
-              class="btn btn-sm btn-danger"
-              (click)="removeUser(i)"
-              *ngIf="combinedForm.users.length > 1"
-            >
+            <button class="btn btn-sm btn-danger" (click)="removeUser(i)" *ngIf="combinedForm.users.length > 1">
               <i class="bi bi-trash"></i>
             </button>
           </div>
-
           <div class="form-row">
             <div class="form-group" [class.has-error]="hasError('users.' + i + '.firstName')">
-              <label><i class="bi bi-person"></i> Prénom <span class="required">*</span></label>
-              <input
-                type="text"
-                name="userFirstName{{ i }}"
-                [(ngModel)]="user.firstName"
-                placeholder="Prénom"
-              />
-              <span class="field-error" *ngIf="hasError('users.' + i + '.firstName')">{{
-                errors['users.' + i + '.firstName']
-              }}</span>
+              <label>Prénom <span class="required">*</span></label>
+              <input type="text" [(ngModel)]="user.firstName" placeholder="Prénom" />
+              <span class="field-error" *ngIf="hasError('users.' + i + '.firstName')">{{ errors['users.' + i + '.firstName'] }}</span>
             </div>
             <div class="form-group" [class.has-error]="hasError('users.' + i + '.lastName')">
-              <label><i class="bi bi-person"></i> Nom <span class="required">*</span></label>
-              <input
-                type="text"
-                name="userLastName{{ i }}"
-                [(ngModel)]="user.lastName"
-                placeholder="Nom"
-              />
-              <span class="field-error" *ngIf="hasError('users.' + i + '.lastName')">{{
-                errors['users.' + i + '.lastName']
-              }}</span>
+              <label>Nom <span class="required">*</span></label>
+              <input type="text" [(ngModel)]="user.lastName" placeholder="Nom" />
+              <span class="field-error" *ngIf="hasError('users.' + i + '.lastName')">{{ errors['users.' + i + '.lastName'] }}</span>
             </div>
           </div>
-
           <div class="form-row">
             <div class="form-group" [class.has-error]="hasError('users.' + i + '.email')">
-              <label><i class="bi bi-envelope"></i> Email <span class="required">*</span></label>
-              <input
-                type="email"
-                name="userEmail{{ i }}"
-                [(ngModel)]="user.email"
-                placeholder="email@entreprise.ma"
-              />
-              <span class="field-error" *ngIf="hasError('users.' + i + '.email')">{{
-                errors['users.' + i + '.email']
-              }}</span>
+              <label>Email <span class="required">*</span></label>
+              <input type="email" [(ngModel)]="user.email" placeholder="email@entreprise.ma" />
+              <span class="field-error" *ngIf="hasError('users.' + i + '.email')">{{ errors['users.' + i + '.email'] }}</span>
             </div>
             <div class="form-group">
-              <label><i class="bi bi-telephone"></i> Téléphone</label>
-              <input
-                type="tel"
-                name="userPhone{{ i }}"
-                [(ngModel)]="user.phone"
-                placeholder="+212 5XX XXX XXX"
-              />
+              <label>Téléphone</label>
+              <input type="tel" [(ngModel)]="user.phone" placeholder="+212 5XX XXX XXX" />
             </div>
           </div>
-
           <div class="form-row">
             <div class="form-group" [class.has-error]="hasError('users.' + i + '.password')">
-              <label><i class="bi bi-lock"></i> Mot de passe <span class="required">*</span></label>
+              <label>Mot de passe <span class="required">*</span></label>
               <div class="password-row">
                 <div class="input-with-toggle">
-                  <input
-                    [type]="showPassword[i] ? 'text' : 'password'"
-                    name="userPassword{{ i }}"
-                    [(ngModel)]="user.password"
-                    placeholder="Mot de passe"
-                  />
+                  <input [type]="showPassword[i] ? 'text' : 'password'" [(ngModel)]="user.password" placeholder="Mot de passe" />
                   <button class="toggle-eye" type="button" (click)="togglePasswordVisibility(i)">
                     <i class="bi" [ngClass]="showPassword[i] ? 'bi-eye-slash' : 'bi-eye'"></i>
                   </button>
@@ -530,58 +350,40 @@
                 <button class="btn-gen" type="button" (click)="generatePassword(i, 'basic')">
                   <i class="bi bi-shuffle"></i> Basique
                 </button>
-                <button
-                  class="btn-gen btn-gen-strong"
-                  type="button"
-                  (click)="generatePassword(i, 'strong')"
-                >
+                <button class="btn-gen btn-gen-strong" type="button" (click)="generatePassword(i, 'strong')">
                   <i class="bi bi-shield-lock"></i> Fort
                 </button>
               </div>
               <div class="pass-preview" *ngIf="user.password && showPassword[i]">
                 <i class="bi bi-key"></i> Mot de passe: <strong>{{ user.password }}</strong>
               </div>
-              <span class="field-error" *ngIf="hasError('users.' + i + '.password')">{{
-                errors['users.' + i + '.password']
-              }}</span>
+              <span class="field-error" *ngIf="hasError('users.' + i + '.password')">{{ errors['users.' + i + '.password'] }}</span>
             </div>
             <div class="form-group" [class.has-error]="hasError('users.' + i + '.role')">
-              <label><i class="bi bi-shield-check"></i> Rôle <span class="required">*</span></label>
-              <select
-                name="userRole{{ i }}"
-                [(ngModel)]="user.role"
-                (ngModelChange)="onUserRoleChange(user)"
-              >
+              <label>Rôle <span class="required">*</span></label>
+              <select [(ngModel)]="user.role" (ngModelChange)="onUserRoleChange(user)">
                 <option *ngFor="let role of USER_ROLES" [value]="role">{{ role }}</option>
               </select>
-              <span class="field-error" *ngIf="hasError('users.' + i + '.role')">{{
-                errors['users.' + i + '.role']
-              }}</span>
+              <span class="field-error" *ngIf="hasError('users.' + i + '.role')">{{ errors['users.' + i + '.role'] }}</span>
             </div>
             <div class="form-group">
               <label>Statut</label>
-              <select name="userStatus{{ i }}" [(ngModel)]="user.status">
+              <select [(ngModel)]="user.status">
                 <option value="ACTIVE">Actif</option>
                 <option value="INACTIVE">Inactif</option>
                 <option value="BLOCKED">Bloqué</option>
               </select>
             </div>
           </div>
-
           <div class="perm-section" *ngIf="user.role !== 'ADMIN'">
             <div class="perm-header">
-              <span class="section-label" style="margin: 0; border: none; padding: 0"
-                >Permissions</span
-              >
+              <span class="section-label" style="margin:0;border:none;padding:0;">Permissions</span>
               <span class="perm-hint">Cliquez pour activer / désactiver</span>
             </div>
             <div class="perm-grid">
-              <div
-                class="perm-item"
-                *ngFor="let p of PERMISSIONS"
+              <div class="perm-item" *ngFor="let p of PERMISSIONS"
                 [class.perm-on]="isUserPermChecked(user, p.key)"
-                (click)="toggleUserPermission(user, p.key)"
-              >
+                (click)="toggleUserPermission(user, p.key)">
                 <div class="perm-checkbox">
                   <i class="bi" [ngClass]="isUserPermChecked(user, p.key) ? 'bi-check-lg' : ''"></i>
                 </div>
@@ -589,127 +391,270 @@
               </div>
             </div>
           </div>
-
           <div class="admin-notice" *ngIf="user.role === 'ADMIN'">
             <i class="bi bi-shield-fill-check"></i>
-            Le rôle <strong>ADMIN</strong> dispose de l'accès total à toutes les fonctionnalités de
-            l'application.
+            Le rôle <strong>ADMIN</strong> dispose de l'accès total.
           </div>
         </div>
-
         <button class="btn btn-outline-primary" (click)="addUser()">
-          <i class="bi bi-plus-lg"></i>
-          Ajouter un utilisateur
+          <i class="bi bi-plus-lg"></i> Ajouter un utilisateur
         </button>
       </div>
 
+      <!-- ── EDIT MODE ── -->
       <div *ngIf="editing">
-        <div class="form-section-title" style="margin-top: 0">Modifier l'entreprise</div>
-        <div class="form-row">
-          <div class="form-group" [class.has-error]="hasError('name')">
-            <label>Nom commercial <span class="required">*</span></label>
-            <input
-              type="text"
-              name="name"
-              [(ngModel)]="form.name"
-              placeholder="Ex: HRMatrix SARL"
-            />
-            <span class="field-error" *ngIf="hasError('name')">{{ errors['name'] }}</span>
+        <div class="details-tabs" style="margin-bottom: 1rem;">
+          <button class="details-tab" [class.active]="editModalTab === 'company'" (click)="editModalTab = 'company'">
+            <i class="bi bi-building"></i> Entreprise
+          </button>
+          <button class="details-tab" [class.active]="editModalTab === 'license'" (click)="editModalTab = 'license'">
+            <i class="bi bi-shield-check"></i> Licence
+          </button>
+          <button class="details-tab" [class.active]="editModalTab === 'users'" (click)="editModalTab = 'users'">
+            <i class="bi bi-people"></i> Utilisateurs
+          </button>
+        </div>
+
+        <div class="form-step-title company-section" style="margin-top: 0">
+          <i class="bi bi-building"></i> Modifier l'entreprise
+        </div>
+
+        <!-- Onglet Entreprise -->
+        <div *ngIf="editModalTab === 'company'">
+          <div class="form-row">
+            <div class="form-group" [class.has-error]="hasError('name')">
+              <label>Nom commercial <span class="required">*</span></label>
+              <input type="text" [(ngModel)]="form.name" placeholder="Ex: HRMatrix SARL" />
+              <span class="field-error" *ngIf="hasError('name')">{{ errors['name'] }}</span>
+            </div>
+            <div class="form-group">
+              <label>Raison sociale</label>
+              <input type="text" [(ngModel)]="form.legalName" placeholder="Ex: HRMatrix Société" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Identifiant fiscal (IF)</label>
+              <input type="text" [(ngModel)]="form.taxIdentifier" placeholder="Ex: 12345678" />
+            </div>
+            <div class="form-group">
+              <label>Numéro RC</label>
+              <input type="text" [(ngModel)]="form.rcNumber" placeholder="Ex: 123456" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Numéro ICE</label>
+              <input type="text" [(ngModel)]="form.iceNumber" placeholder="Ex: 001234567000012" />
+            </div>
+            <div class="form-group">
+              <label>Numéro CNSS</label>
+              <input type="text" [(ngModel)]="form.cnssNumber" placeholder="Ex: 1234567" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" [(ngModel)]="form.email" placeholder="contact@entreprise.ma" />
+            </div>
+            <div class="form-group">
+              <label>Téléphone</label>
+              <input type="tel" [(ngModel)]="form.phone" placeholder="+212 5XX XXX XXX" />
+            </div>
           </div>
           <div class="form-group">
-            <label>Raison sociale</label>
-            <input
-              type="text"
-              name="legalName"
-              [(ngModel)]="form.legalName"
-              placeholder="Ex: HRMatrix Société"
-            />
+            <label>Adresse</label>
+            <input type="text" [(ngModel)]="form.address" placeholder="N° rue, quartier..." />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Ville</label>
+              <input type="text" [(ngModel)]="form.city" placeholder="Ex: Casablanca" />
+            </div>
+            <div class="form-group">
+              <label>Pays</label>
+              <input type="text" [(ngModel)]="form.country" placeholder="Maroc" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Devise</label>
+              <select [(ngModel)]="form.currency">
+                <option value="MAD">MAD — Dirham marocain</option>
+                <option value="EUR">EUR — Euro</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Statut</label>
+              <select [(ngModel)]="form.status">
+                <option *ngFor="let s of statusOptions" [value]="s">{{ s }}</option>
+              </select>
+            </div>
           </div>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label>Identifiant fiscal (IF)</label>
-            <input
-              type="text"
-              name="taxIdentifier"
-              [(ngModel)]="form.taxIdentifier"
-              placeholder="Ex: 12345678"
-            />
-          </div>
-          <div class="form-group">
-            <label>Numéro RC</label>
-            <input
-              type="text"
-              name="rcNumber"
-              [(ngModel)]="form.rcNumber"
-              placeholder="Ex: 123456"
-            />
+        <!-- Onglet Licence -->
+        <div *ngIf="editModalTab === 'license'">
+          <div class="form-step-title license-section"><i class="bi bi-card-text"></i> Modifier la licence</div>
+          <div class="api-error" *ngIf="!editingLicense">Chargement de la licence...</div>
+          <div *ngIf="editingLicense">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Plan</label>
+                <select [(ngModel)]="editingLicense.planCode">
+                  <option *ngFor="let p of planOptions" [value]="p">{{ p }}</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Statut</label>
+                <select [(ngModel)]="editingLicense.status">
+                  <option *ngFor="let s of licenseStatusOptions" [value]="s">{{ s }}</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Cycle de facturation</label>
+                <select [(ngModel)]="editingLicense.billingCycle">
+                  <option *ngFor="let b of billingOptions" [value]="b">{{ b }}</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Date de début</label>
+                <input type="date" [(ngModel)]="editingLicense.startsAt" />
+              </div>
+              <div class="form-group">
+                <label>Date de fin</label>
+                <input type="date" [(ngModel)]="editingLicense.endsAt" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Max utilisateurs</label>
+                <input type="number" [(ngModel)]="editingLicense.maxUsers" placeholder="Illimité" min="1" />
+              </div>
+              <div class="form-group">
+                <label>Max employés</label>
+                <input type="number" [(ngModel)]="editingLicense.maxEmployees" placeholder="Illimité" min="1" />
+              </div>
+              <div class="form-group">
+                <label>Max stockage (Mo)</label>
+                <input type="number" [(ngModel)]="editingLicense.maxStorageMb" placeholder="Illimité" min="1" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label><input type="checkbox" [(ngModel)]="editingLicense.payrollEnabled" /> Paie</label>
+              </div>
+              <div class="form-group">
+                <label><input type="checkbox" [(ngModel)]="editingLicense.rhEnabled" /> RH</label>
+              </div>
+              <div class="form-group">
+                <label><input type="checkbox" [(ngModel)]="editingLicense.cnssEnabled" /> CNSS</label>
+              </div>
+              <div class="form-group">
+                <label><input type="checkbox" [(ngModel)]="editingLicense.taxEnabled" /> Fiscal</label>
+              </div>
+              <div class="form-group">
+                <label><input type="checkbox" [(ngModel)]="editingLicense.damancomEnabled" /> Damancom</label>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label>Numéro ICE</label>
-            <input
-              type="text"
-              name="iceNumber"
-              [(ngModel)]="form.iceNumber"
-              placeholder="Ex: 001234567000012"
-            />
+        <!-- Onglet Utilisateurs -->
+        <div *ngIf="editModalTab === 'users'">
+          <div class="form-step-title user-section"><i class="bi bi-people"></i> Modifier les utilisateurs</div>
+          <div class="api-error" *ngIf="editingUsers.length === 0">
+            Aucun utilisateur chargé (ou aucun utilisateur pour cette entreprise).
           </div>
-          <div class="form-group">
-            <label>Numéro CNSS</label>
-            <input
-              type="text"
-              name="cnssNumber"
-              [(ngModel)]="form.cnssNumber"
-              placeholder="Ex: 1234567"
-            />
-          </div>
-        </div>
 
-        <div class="form-subtitle">Contact</div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Email</label>
-            <input
-              type="email"
-              name="email"
-              [(ngModel)]="form.email"
-              placeholder="contact@entreprise.ma"
-            />
-          </div>
-          <div class="form-group">
-            <label>Téléphone</label>
-            <input
-              type="tel"
-              name="phone"
-              [(ngModel)]="form.phone"
-              placeholder="+212 5XX XXX XXX"
-            />
-          </div>
-        </div>
+          <div *ngFor="let user of editingUsers; let i = index" class="user-card">
+            <div class="user-header">
+              <h5>Utilisateur {{ i + 1 }}</h5>
+              <button class="btn btn-sm btn-danger" (click)="removeEditUser(i)" *ngIf="editingUsers.length > 1">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Prénom <span class="required">*</span></label>
+                <input type="text" [(ngModel)]="user.firstName" placeholder="Prénom" />
+              </div>
+              <div class="form-group">
+                <label>Nom <span class="required">*</span></label>
+                <input type="text" [(ngModel)]="user.lastName" placeholder="Nom" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Email <span class="required">*</span></label>
+                <input type="email" [(ngModel)]="user.email" placeholder="email@entreprise.ma" />
+              </div>
+              <div class="form-group">
+                <label>Téléphone</label>
+                <input type="tel" [(ngModel)]="user.phone" placeholder="+212 5XX XXX XXX" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Mot de passe <span class="required" *ngIf="!user.id">*</span></label>
+                <div class="password-row">
+                  <div class="input-with-toggle">
+                    <input [type]="showPassword[i] ? 'text' : 'password'" [(ngModel)]="user.password" placeholder="Mot de passe (requis si nouvel utilisateur)" />
+                    <button class="toggle-eye" type="button" (click)="togglePasswordVisibility(i)">
+                      <i class="bi" [ngClass]="showPassword[i] ? 'bi-eye-slash' : 'bi-eye'"></i>
+                    </button>
+                  </div>
+                  <button class="btn-gen" type="button" (click)="generatePassword(i, 'basic')">
+                    <i class="bi bi-shuffle"></i> Basique
+                  </button>
+                  <button class="btn-gen btn-gen-strong" type="button" (click)="generatePassword(i, 'strong')">
+                    <i class="bi bi-shield-lock"></i> Fort
+                  </button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Rôle</label>
+                <select [(ngModel)]="user.role" (ngModelChange)="onUserRoleChange(user)">
+                  <option *ngFor="let role of USER_ROLES" [value]="role">{{ role }}</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Statut</label>
+                <select [(ngModel)]="user.status">
+                  <option value="ACTIVE">Actif</option>
+                  <option value="INACTIVE">Inactif</option>
+                  <option value="BLOCKED">Bloqué</option>
+                </select>
+              </div>
+            </div>
 
-        <div class="form-group">
-          <label>Adresse</label>
-          <input
-            type="text"
-            name="address"
-            [(ngModel)]="form.address"
-            placeholder="N° rue, quartier..."
-          />
-        </div>
+            <div class="perm-section" *ngIf="user.role !== 'ADMIN'">
+              <div class="perm-header">
+                <span class="section-label" style="margin:0;border:none;padding:0;">Permissions</span>
+                <span class="perm-hint">Cliquez pour activer / désactiver</span>
+              </div>
+              <div class="perm-grid">
+                <div class="perm-item" *ngFor="let p of PERMISSIONS"
+                  [class.perm-on]="isUserPermChecked(user, p.key)"
+                  (click)="toggleUserPermission(user, p.key)">
+                  <div class="perm-checkbox">
+                    <i class="bi" [ngClass]="isUserPermChecked(user, p.key) ? 'bi-check-lg' : ''"></i>
+                  </div>
+                  <span class="perm-label">{{ p.label }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="admin-notice" *ngIf="user.role === 'ADMIN'">
+              <i class="bi bi-shield-fill-check"></i>
+              Le rôle <strong>ADMIN</strong> dispose de l'accès total.
+            </div>
+          </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label>Ville</label>
-            <input type="text" name="city" [(ngModel)]="form.city" placeholder="Ex: Casablanca" />
-          </div>
-          <div class="form-group">
-            <label>Pays</label>
-            <input type="text" name="country" [(ngModel)]="form.country" placeholder="Maroc" />
-          </div>
+          <button class="btn btn-outline-primary" (click)="addEditUser()">
+            <i class="bi bi-plus-lg"></i> Ajouter un utilisateur
+          </button>
         </div>
       </div>
     </div>
@@ -723,431 +668,284 @@
   </div>
 </div>
 
+<!-- =====================================================================
+     DETAILS MODAL — أفيشاج فقط، 3 tabs
+     ===================================================================== -->
 <div class="modal-overlay" *ngIf="showDetailsModal" (click)="showDetailsModal = false">
-  <div class="custom-modal large" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h3>Détails entreprise</h3>
+  <div class="details-modal" (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="details-modal-header">
+      <div class="details-modal-title">
+        <div class="company-avatar">
+          {{ selectedCompany?.name?.[0]?.toUpperCase() }}
+        </div>
+        <div>
+          <h3>{{ selectedCompany?.name }}</h3>
+          <span class="badge"
+            [class.badge-success]="selectedCompany?.status === 'ACTIVE'"
+            [class.badge-warning]="selectedCompany?.status === 'INACTIVE'"
+            [class.badge-danger]="selectedCompany?.status === 'SUSPENDED'">
+            {{ selectedCompany?.status }}
+          </span>
+        </div>
+      </div>
       <button class="close-btn" (click)="showDetailsModal = false">
-        <svg viewBox="0 0 20 20" fill="currentColor" width="20">
-          <path
-            fill-rule="evenodd"
-            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-            clip-rule="evenodd"
-          />
-        </svg>
+        <i class="bi bi-x-lg"></i>
       </button>
     </div>
 
-    <div class="modal-body" *ngIf="selectedCompany; else detailsLoading">
-      <div class="details-tabs mb-4">
-        <button
-          class="tab-btn"
-          [class.active]="activeDetailsTab === 'company'"
-          (click)="activeDetailsTab = 'company'"
-        >
-          <i class="bi bi-building"></i> Entreprise
-        </button>
-        <button
-          class="tab-btn"
-          [class.active]="activeDetailsTab === 'license'"
-          (click)="activeDetailsTab = 'license'"
-        >
-          <i class="bi bi-shield-check"></i> Licence
-        </button>
-        <button
-          class="tab-btn"
-          [class.active]="activeDetailsTab === 'users'"
-          (click)="activeDetailsTab = 'users'"
-        >
-          <i class="bi bi-people"></i> Utilisateurs
-        </button>
+    <!-- Tabs -->
+    <div class="details-tabs">
+      <button class="details-tab" [class.active]="activeDetailsTab === 'company'"
+        (click)="activeDetailsTab = 'company'">
+        <i class="bi bi-building"></i> Entreprise
+      </button>
+      <button class="details-tab" [class.active]="activeDetailsTab === 'license'"
+        (click)="activeDetailsTab = 'license'">
+        <i class="bi bi-shield-check"></i> Licence
+      </button>
+      <button class="details-tab" [class.active]="activeDetailsTab === 'users'"
+        (click)="activeDetailsTab = 'users'">
+        <i class="bi bi-people"></i> Utilisateurs
+        <span class="tab-count" *ngIf="selectedCompanyUsers.length > 0">
+          {{ selectedCompanyUsers.length }}
+        </span>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="details-modal-body">
+
+      <!-- ── TAB ENTREPRISE ── -->
+      <div *ngIf="activeDetailsTab === 'company'">
+        <div class="info-grid">
+
+          <div class="info-section">
+            <div class="info-section-title">
+              <i class="bi bi-info-circle"></i> Informations générales
+            </div>
+            <div class="info-rows">
+              <div class="info-row">
+                <span class="info-label">Nom commercial</span>
+                <span class="info-value">{{ selectedCompany?.name || '—' }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Raison sociale</span>
+                <span class="info-value">{{ selectedCompany?.legalName || '—' }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Devise</span>
+                <span class="info-value">
+                  <span class="badge badge-default">{{ selectedCompany?.currency || 'MAD' }}</span>
+                </span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Statut</span>
+                <span class="info-value">
+                  <span class="badge"
+                    [class.badge-success]="selectedCompany?.status === 'ACTIVE'"
+                    [class.badge-warning]="selectedCompany?.status === 'INACTIVE'"
+                    [class.badge-danger]="selectedCompany?.status === 'SUSPENDED'">
+                    {{ selectedCompany?.status }}
+                  </span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-section">
+            <div class="info-section-title">
+              <i class="bi bi-envelope"></i> Contact
+            </div>
+            <div class="info-rows">
+              <div class="info-row">
+                <span class="info-label">Email</span>
+                <span class="info-value">{{ selectedCompany?.email || '—' }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Téléphone</span>
+                <span class="info-value">{{ selectedCompany?.phone || '—' }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Adresse</span>
+                <span class="info-value">{{ selectedCompany?.address || '—' }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Ville</span>
+                <span class="info-value">{{ selectedCompany?.city || '—' }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Pays</span>
+                <span class="info-value">{{ selectedCompany?.country || 'Maroc' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-section">
+            <div class="info-section-title">
+              <i class="bi bi-file-text"></i> Identifiants légaux
+            </div>
+            <div class="info-rows">
+              <div class="info-row">
+                <span class="info-label">Identifiant fiscal</span>
+                <span class="info-value info-mono">{{ selectedCompany?.taxIdentifier || '—' }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Numéro RC</span>
+                <span class="info-value info-mono">{{ selectedCompany?.rcNumber || '—' }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Numéro ICE</span>
+                <span class="info-value info-mono">{{ selectedCompany?.iceNumber || '—' }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Numéro CNSS</span>
+                <span class="info-value info-mono">{{ selectedCompany?.cnssNumber || '—' }}</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
 
-      <div *ngIf="activeDetailsTab === 'company'" class="detail-section detail-company">
-        <div class="detail-card">
-          <div class="detail-card-header">
-            <h5><i class="bi bi-building"></i> Informations générales</h5>
-            <div class="company-status">
-              <span
-                class="badge"
-                [class.badge-success]="selectedCompany.status === 'ACTIVE'"
-                [class.badge-warning]="selectedCompany.status === 'INACTIVE'"
-                [class.badge-danger]="selectedCompany.status === 'SUSPENDED'"
-              >
-                {{ selectedCompany.status }}
+      <!-- ── TAB LICENCE ── -->
+      <div *ngIf="activeDetailsTab === 'license'">
+        <div *ngIf="selectedLicense; else noLicense">
+          <div class="license-header">
+            <div class="license-plan">
+              <i class="bi bi-shield-fill-check"></i>
+              <span>{{ selectedLicense.planCode }}</span>
+            </div>
+            <span class="badge"
+              [class.badge-success]="selectedLicense.status === 'ACTIVE'"
+              [class.badge-warning]="selectedLicense.status === 'TRIAL'"
+              [class.badge-danger]="selectedLicense.status === 'EXPIRED' || selectedLicense.status === 'SUSPENDED'">
+              {{ selectedLicense.status }}
+            </span>
+          </div>
+
+          <div class="info-grid">
+            <div class="info-section">
+              <div class="info-section-title">
+                <i class="bi bi-calendar3"></i> Période
+              </div>
+              <div class="info-rows">
+                <div class="info-row">
+                  <span class="info-label">Date de début</span>
+                  <span class="info-value">{{ selectedLicense.startsAt | date:'dd/MM/yyyy' }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Date de fin</span>
+                  <span class="info-value">
+                    {{ selectedLicense.endsAt ? (selectedLicense.endsAt | date:'dd/MM/yyyy') : 'Illimitée' }}
+                  </span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Facturation</span>
+                  <span class="info-value">{{ selectedLicense.billingCycle }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="info-section">
+              <div class="info-section-title">
+                <i class="bi bi-bar-chart"></i> Limites
+              </div>
+              <div class="info-rows">
+                <div class="info-row">
+                  <span class="info-label">Max utilisateurs</span>
+                  <span class="info-value">{{ selectedLicense.maxUsers || '∞' }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Max employés</span>
+                  <span class="info-value">{{ selectedLicense.maxEmployees || '∞' }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Max stockage</span>
+                  <span class="info-value">
+                    {{ selectedLicense.maxStorageMb ? selectedLicense.maxStorageMb + ' Mo' : '∞' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-section" style="margin-top: 1rem;">
+            <div class="info-section-title">
+              <i class="bi bi-toggles"></i> Fonctionnalités activées
+            </div>
+            <div class="feature-tags">
+              <span class="feature-tag" [class.feature-on]="selectedLicense.payrollEnabled">
+                <i class="bi bi-cash-stack"></i> Paie
+              </span>
+              <span class="feature-tag" [class.feature-on]="selectedLicense.rhEnabled">
+                <i class="bi bi-people"></i> RH
+              </span>
+              <span class="feature-tag" [class.feature-on]="selectedLicense.cnssEnabled">
+                <i class="bi bi-file-bar-graph"></i> CNSS
+              </span>
+              <span class="feature-tag" [class.feature-on]="selectedLicense.taxEnabled">
+                <i class="bi bi-receipt"></i> Fiscal
+              </span>
+              <span class="feature-tag" [class.feature-on]="selectedLicense.damancomEnabled">
+                <i class="bi bi-shield-exclamation"></i> Damancom
               </span>
             </div>
           </div>
-          <div class="detail-grid">
-            <div class="detail-item">
-              <label>Nom commercial</label>
-              <div class="detail-value">{{ selectedCompany.name }}</div>
-            </div>
-            <div class="detail-item">
-              <label>Raison sociale</label>
-              <div class="detail-value">{{ selectedCompany.legalName || '—' }}</div>
-            </div>
-            <div class="detail-item">
-              <label>Email</label>
-              <div class="detail-value">{{ selectedCompany.email || '—' }}</div>
-            </div>
-            <div class="detail-item">
-              <label>Téléphone</label>
-              <div class="detail-value">{{ selectedCompany.phone || '—' }}</div>
-            </div>
-            <div class="detail-item">
-              <label>Adresse</label>
-              <div class="detail-value">{{ selectedCompany.address || '—' }}</div>
-            </div>
-            <div class="detail-item">
-              <label>Ville</label>
-              <div class="detail-value">{{ selectedCompany.city || '—' }}</div>
-            </div>
-            <div class="detail-item">
-              <label>Pays</label>
-              <div class="detail-value">{{ selectedCompany.country || 'Maroc' }}</div>
-            </div>
-            <div class="detail-item">
-              <label>Devise</label>
-              <div class="detail-value">{{ selectedCompany.currency || 'MAD' }}</div>
-            </div>
-            <div class="detail-item">
-              <label>Identifiant fiscal</label>
-              <div class="detail-value">{{ selectedCompany.taxIdentifier || '—' }}</div>
-            </div>
-            <div class="detail-item">
-              <label>Numéro RC</label>
-              <div class="detail-value">{{ selectedCompany.rcNumber || '—' }}</div>
-            </div>
-            <div class="detail-item">
-              <label>Numéro ICE</label>
-              <div class="detail-value">{{ selectedCompany.iceNumber || '—' }}</div>
-            </div>
-            <div class="detail-item">
-              <label>Numéro CNSS</label>
-              <div class="detail-value">{{ selectedCompany.cnssNumber || '—' }}</div>
-            </div>
-          </div>
-          <div class="detail-actions mt-4">
-            <button class="btn btn-primary" (click)="detailEditSection = 'company'">
-              <i class="bi bi-pencil"></i> Modifier entreprise
-            </button>
-          </div>
         </div>
-        <div *ngIf="detailEditSection === 'company'" class="edit-panel mt-3">
-          <div class="alert alert-info mb-3">
-            <i class="fas fa-edit"></i>
-            <strong>Modification en cours:</strong> Vous êtes en train de modifier les informations
-            de l'entreprise
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Nom commercial</label>
-              <input type="text" class="form-control" [(ngModel)]="selectedCompany.name" />
-            </div>
-            <div class="form-group">
-              <label>Raison sociale</label>
-              <input type="text" class="form-control" [(ngModel)]="selectedCompany.legalName" />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Email</label>
-              <input type="email" class="form-control" [(ngModel)]="selectedCompany.email" />
-            </div>
-            <div class="form-group">
-              <label>Téléphone</label>
-              <input type="tel" class="form-control" [(ngModel)]="selectedCompany.phone" />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Ville</label>
-              <input type="text" class="form-control" [(ngModel)]="selectedCompany.city" />
-            </div>
-            <div class="form-group">
-              <label>Pays</label>
-              <input type="text" class="form-control" [(ngModel)]="selectedCompany.country" />
-            </div>
-          </div>
-          <div class="text-end mt-3">
-            <button class="btn btn-secondary me-2" (click)="cancelCompanyEdit()">Annuler</button>
-            <button class="btn btn-primary" (click)="saveCompanyDetails()">
-              Enregistrer l'entreprise
-            </button>
-          </div>
-        </div>
-      </div>
 
-      <div *ngIf="activeDetailsTab === 'license'" class="detail-section detail-license">
-        <div *ngIf="selectedLicense; else noLicense">
-          <div class="detail-card">
-            <div class="detail-card-header">
-              <h5><i class="bi bi-shield-check"></i> Informations de licence</h5>
-              <div class="license-status">
-                <span
-                  class="badge"
-                  [class.badge-success]="selectedLicense.status === 'ACTIVE'"
-                  [class.badge-warning]="selectedLicense.status === 'TRIAL'"
-                  [class.badge-danger]="selectedLicense.status === 'EXPIRED'"
-                >
-                  {{ selectedLicense.status }}
-                </span>
-              </div>
-            </div>
-            <div class="detail-grid">
-              <div class="detail-item">
-                <label>Plan</label>
-                <div class="detail-value">{{ selectedLicense.planCode }}</div>
-              </div>
-              <div class="detail-item">
-                <label>Statut</label>
-                <div class="detail-value">{{ selectedLicense.status }}</div>
-              </div>
-              <div class="detail-item">
-                <label>Cycle de facturation</label>
-                <div class="detail-value">{{ selectedLicense.billingCycle }}</div>
-              </div>
-              <div class="detail-item">
-                <label>Date de début</label>
-                <div class="detail-value">{{ selectedLicense.startsAt | date: 'dd/MM/yyyy' }}</div>
-              </div>
-              <div class="detail-item">
-                <label>Date de fin</label>
-                <div class="detail-value">
-                  {{
-                    selectedLicense.endsAt
-                      ? (selectedLicense.endsAt | date: 'dd/MM/yyyy')
-                      : 'Illimité'
-                  }}
-                </div>
-              </div>
-              <div class="detail-item">
-                <label>Max utilisateurs</label>
-                <div class="detail-value">{{ selectedLicense.maxUsers || '∞' }}</div>
-              </div>
-              <div class="detail-item">
-                <label>Max employés</label>
-                <div class="detail-value">{{ selectedLicense.maxEmployees || '∞' }}</div>
-              </div>
-              <div class="detail-item">
-                <label>Max stockage</label>
-                <div class="detail-value">
-                  {{ selectedLicense.maxStorageMb ? selectedLicense.maxStorageMb + ' Mo' : '∞' }}
-                </div>
-              </div>
-            </div>
-            <div class="license-features mt-3">
-              <h6><i class="bi bi-gear"></i> Fonctionnalités activées</h6>
-              <div class="feature-tags">
-                <span class="feature-tag" [class.active]="selectedLicense.payrollEnabled">
-                  <i class="bi bi-cash-stack"></i> Paie
-                </span>
-                <span class="feature-tag" [class.active]="selectedLicense.rhEnabled">
-                  <i class="bi bi-people"></i> RH
-                </span>
-                <span class="feature-tag" [class.active]="selectedLicense.cnssEnabled">
-                  <i class="bi bi-file-bar-graph"></i> CNSS
-                </span>
-                <span class="feature-tag" [class.active]="selectedLicense.taxEnabled">
-                  <i class="bi bi-receipt"></i> Fiscal
-                </span>
-                <span class="feature-tag" [class.active]="selectedLicense.damancomEnabled">
-                  <i class="bi bi-shield-exclamation"></i> Damancom
-                </span>
-              </div>
-            </div>
-            <div class="detail-actions mt-4">
-              <button class="btn btn-primary" (click)="detailEditSection = 'license'">
-                <i class="bi bi-pencil"></i> Modifier licence
-              </button>
-              <button class="btn btn-success ms-2" (click)="generateContract()">
-                <i class="bi bi-file-earmark-pdf"></i> Générer contrat PDF
-              </button>
-            </div>
-          </div>
-          <div *ngIf="detailEditSection === 'license'" class="edit-panel mt-3">
-            <div class="alert alert-info mb-3">
-              <i class="fas fa-edit"></i>
-              <strong>Modification en cours:</strong> Vous êtes en train de modifier les
-              informations de la licence
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label>Plan</label>
-                <select class="form-control" [(ngModel)]="selectedLicense.planCode">
-                  <option *ngFor="let p of planOptions" [value]="p">{{ p }}</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label>Statut</label>
-                <select class="form-control" [(ngModel)]="selectedLicense.status">
-                  <option *ngFor="let s of licenseStatusOptions" [value]="s">{{ s }}</option>
-                </select>
-              </div>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label>Début</label>
-                <input type="date" class="form-control" [(ngModel)]="selectedLicense.startsAt" />
-              </div>
-              <div class="form-group">
-                <label>Fin</label>
-                <input type="date" class="form-control" [(ngModel)]="selectedLicense.endsAt" />
-              </div>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label>Max utilisateurs</label>
-                <input
-                  type="number"
-                  class="form-control"
-                  [(ngModel)]="selectedLicense.maxUsers"
-                  min="1"
-                />
-              </div>
-              <div class="form-group">
-                <label>Max employés</label>
-                <input
-                  type="number"
-                  class="form-control"
-                  [(ngModel)]="selectedLicense.maxEmployees"
-                  min="1"
-                />
-              </div>
-            </div>
-            <div class="text-end mt-3">
-              <button class="btn btn-secondary me-2" (click)="cancelLicenseEdit()">Annuler</button>
-              <button class="btn btn-primary" (click)="saveLicenseDetails()">
-                Enregistrer la licence
-              </button>
-            </div>
-          </div>
-        </div>
         <ng-template #noLicense>
-          <div class="alert alert-warning">Aucune licence trouvée pour cette entreprise.</div>
+          <div class="empty-tab">
+            <i class="bi bi-shield-x" style="font-size: 2.5rem; color: #cbd5e1;"></i>
+            <p>Aucune licence trouvée pour cette entreprise.</p>
+          </div>
         </ng-template>
       </div>
 
-      <div *ngIf="activeDetailsTab === 'users'" class="detail-section detail-users">
-        <div class="detail-card">
-          <div class="detail-card-header">
-            <h5><i class="bi bi-people"></i> Utilisateurs de l'entreprise</h5>
-            <div class="user-count">
-              <span class="badge badge-primary"
-                >{{ selectedCompanyUsers.length }} utilisateur{{
-                  selectedCompanyUsers.length > 1 ? 's' : ''
-                }}</span
-              >
-            </div>
-          </div>
-          <div *ngIf="selectedCompanyUsers.length > 0; else noUsers">
-            <div class="users-grid">
-              <div class="user-card" *ngFor="let user of selectedCompanyUsers">
-                <div class="user-avatar">{{ user.firstName?.[0] }}{{ user.lastName?.[0] }}</div>
-                <div class="user-info">
-                  <div class="user-name">{{ user.firstName }} {{ user.lastName }}</div>
-                  <div class="user-email">{{ user.email }}</div>
-                  <div class="user-role">
-                    <span class="badge role-badge" [ngClass]="roleBadgeClass(user.role)">
-                      <i class="bi" [ngClass]="roleIcon(user.role)"></i>
-                      {{ roleLabel(user.role) }}
-                    </span>
-                    <span class="status-dot" [class.active]="user.status === 'ACTIVE'">
-                      <i class="bi bi-circle-fill"></i>
-                      {{ user.status === 'ACTIVE' ? 'Actif' : user.status }}
-                    </span>
-                  </div>
-                </div>
-                <div class="user-actions">
-                  <button
-                    class="btn btn-icon btn-secondary"
-                    type="button"
-                    title="Modifier"
-                    (click)="editCompanyUser(user)"
-                  >
-                    <i class="bi bi-pencil"></i>
-                  </button>
-                  <button
-                    class="btn btn-icon btn-danger"
-                    type="button"
-                    title="Supprimer"
-                    (click)="deleteCompanyUser(user)"
-                  >
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </div>
+      <!-- ── TAB UTILISATEURS ── -->
+      <div *ngIf="activeDetailsTab === 'users'">
+        <div *ngIf="selectedCompanyUsers.length > 0; else noUsers">
+          <div class="users-list">
+            <div class="user-row" *ngFor="let user of selectedCompanyUsers">
+              <div class="user-avatar-sm">
+                {{ user.firstName?.[0] }}{{ user.lastName?.[0] }}
+              </div>
+              <div class="user-info">
+                <div class="user-name">{{ user.firstName }} {{ user.lastName }}</div>
+                <div class="user-email">{{ user.email }}</div>
+              </div>
+              <div class="user-meta">
+                <span class="badge role-badge" [ngClass]="roleBadgeClass(user.role)">
+                  <i class="bi" [ngClass]="roleIcon(user.role)"></i>
+                  {{ roleLabel(user.role) }}
+                </span>
+                <span class="status-dot" [class.active]="user.status === 'ACTIVE'">
+                  <i class="bi bi-circle-fill"></i>
+                  {{ user.status === 'ACTIVE' ? 'Actif' : user.status }}
+                </span>
               </div>
             </div>
           </div>
         </div>
+
         <ng-template #noUsers>
-          <div class="alert alert-info">Aucun utilisateur enregistré pour cette entreprise.</div>
+          <div class="empty-tab">
+            <i class="bi bi-people" style="font-size: 2.5rem; color: #cbd5e1;"></i>
+            <p>Aucun utilisateur pour cette entreprise.</p>
+          </div>
         </ng-template>
-        <div *ngIf="selectedEditableUser" class="edit-user-panel mt-4">
-          <div class="panel-heading d-flex justify-content-between align-items-center mb-3">
-            <div>
-              <h5>Modifier l'utilisateur</h5>
-              <p class="text-muted mb-0">Éditez les informations puis cliquez sur Enregistrer.</p>
-            </div>
-            <button class="btn btn-secondary btn-sm" type="button" (click)="cancelUserEdit()">
-              Annuler
-            </button>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Prénom</label>
-              <input type="text" class="form-control" [(ngModel)]="userEditForm.firstName" />
-            </div>
-            <div class="form-group">
-              <label>Nom</label>
-              <input type="text" class="form-control" [(ngModel)]="userEditForm.lastName" />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Email</label>
-              <input type="email" class="form-control" [(ngModel)]="userEditForm.email" />
-            </div>
-            <div class="form-group">
-              <label>Téléphone</label>
-              <input type="tel" class="form-control" [(ngModel)]="userEditForm.phone" />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Rôle</label>
-              <select class="form-control" [(ngModel)]="userEditForm.role">
-                <option *ngFor="let role of USER_ROLES" [value]="role">{{ role }}</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Statut</label>
-              <select class="form-control" [(ngModel)]="userEditForm.status">
-                <option value="ACTIVE">Actif</option>
-                <option value="INACTIVE">Inactif</option>
-                <option value="BLOCKED">Bloqué</option>
-              </select>
-            </div>
-          </div>
-          <div class="text-end mt-3">
-            <button class="btn btn-secondary me-2" type="button" (click)="cancelUserEdit()">
-              Annuler
-            </button>
-            <button class="btn btn-primary" type="button" (click)="saveCompanyUser()">
-              Enregistrer
-            </button>
-          </div>
-        </div>
       </div>
+
+    </div><!-- /details-modal-body -->
+
+    <!-- Footer -->
+    <div class="details-modal-footer">
+      <button class="btn btn-secondary" (click)="showDetailsModal = false">
+        <i class="bi bi-x-circle"></i> Fermer
+      </button>
+   
     </div>
 
-    <ng-template #detailsLoading>
-      <div class="loading-message">Chargement des détails...</div>
-    </ng-template>
-
-    <div class="modal-footer">
-      <button class="btn btn-secondary" (click)="showDetailsModal = false">Fermer</button>
-    </div>
   </div>
 </div>

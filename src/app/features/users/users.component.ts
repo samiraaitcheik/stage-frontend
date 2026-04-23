@@ -7,16 +7,16 @@ import { AuthService } from '../../core/services/auth.service';
 import { Company } from '../../core/models';
 
 export const PERMISSIONS = [
-  { key: 'dashboard',     label: 'Tableau de bord',    icon: 'bi-grid-1x2' },
-  { key: 'employees',     label: 'Employés',            icon: 'bi-people' },
-  { key: 'payroll',       label: 'Paie',                icon: 'bi-cash-stack' },
-  { key: 'organisation',  label: 'Organisation',        icon: 'bi-building' },
-  { key: 'companies',     label: 'Entreprises',         icon: 'bi-buildings' },
-  { key: 'attendance',    label: 'Présences',           icon: 'bi-calendar-check' },
-  { key: 'contracts',     label: 'Contrats',            icon: 'bi-file-earmark-text' },
-  { key: 'reports',       label: 'Rapports CNSS',       icon: 'bi-file-bar-graph' },
-  { key: 'licenses',      label: 'Licences',            icon: 'bi-shield-check' },
-  { key: 'users',         label: 'Utilisateurs',        icon: 'bi-person-gear' },
+  { key: 'dashboard',     label: 'Tableau de bord',     icon: 'bi-grid-1x2' },
+  { key: 'employees',     label: 'Employés',             icon: 'bi-people' },
+  { key: 'payroll',       label: 'Paie',                 icon: 'bi-cash-stack' },
+  { key: 'organisation',  label: 'Organisation',         icon: 'bi-building' },
+  { key: 'companies',     label: 'Entreprises',          icon: 'bi-buildings' },
+  { key: 'attendance',    label: 'Présences',            icon: 'bi-calendar-check' },
+  { key: 'contracts',     label: 'Contrats',             icon: 'bi-file-earmark-text' },
+  { key: 'reports',       label: 'Rapports CNSS',        icon: 'bi-file-bar-graph' },
+  { key: 'licenses',      label: 'Licences',             icon: 'bi-shield-check' },
+  { key: 'users',         label: 'Utilisateurs',         icon: 'bi-person-gear' },
 ];
 
 export const ROLE_PRESETS: Record<string, string[]> = {
@@ -83,6 +83,11 @@ export class UsersComponent implements OnInit {
 
   ngOnInit() {
     this.load();
+    
+    // Debug for permissions
+    console.log('Current User:', this.auth.currentUser());
+    console.log('Is Admin:', this.isAdmin());
+
     if (this.auth.isSuperAdmin()) {
       this.companyService.getAll().subscribe({ next: (data) => this.companies = data });
     }
@@ -113,10 +118,14 @@ export class UsersComponent implements OnInit {
     return { firstName: '', lastName: '', email: '', phone: '', role: '', password: '', permissions: [], status: 'ACTIVE' };
   }
 
+  // Modified logic to ensure SUPER_ADMIN is always treated as Admin
   isAdmin(): boolean {
-    return this.auth.currentUser()?.role === 'ADMIN' || this.auth.isSuperAdmin();
+    const user = this.auth.currentUser();
+    const role = user?.role;
+    return role === 'ADMIN' || role === 'SUPER_ADMIN' || this.auth.isSuperAdmin();
   }
 
+  // Function called by *ngIf in HTML
   canManageUsers(): boolean {
     return this.isAdmin();
   }
@@ -124,62 +133,19 @@ export class UsersComponent implements OnInit {
   load() {
     this.loading = true;
     this.error = '';
-    console.log('Starting to load users...');
-    
     this.service.getAll().subscribe({
       next: (data) => { 
-        console.log('Users API response:', data);
-        this.items = Array.isArray(data) ? data : []; 
-        this.filtered = [...this.items];
+        this.items = data; 
         this.applySearch(); 
         this.loading = false; 
-        console.log('Users loaded successfully:', this.items.length, 'items');
+        console.log('Users loaded:', data);
       },
       error: (err) => { 
-        console.error('Error loading users:', err);
         this.loading = false;
-        this.items = [];
-        this.filtered = [];
         this.error = err?.error?.error || err?.message || 'Erreur lors du chargement des utilisateurs';
-        
-        // Try alternative endpoint if main one fails
-        if (err?.status === 404 || err?.status === 500) {
-          console.log('Trying fallback endpoint...');
-          this.fallbackLoadUsers();
-        }
+        console.error('Error loading users:', err);
       }
     });
-  }
-
-  fallbackLoadUsers() {
-    // Try loading from companies endpoint as fallback
-    if (this.auth.isSuperAdmin()) {
-      this.companyService.getAll().subscribe({
-        next: (companies) => {
-          console.log('Companies loaded as fallback:', companies);
-          // Extract users from companies if available
-          const allUsers: any[] = [];
-          companies.forEach((company: any) => {
-            if (company.users && Array.isArray(company.users)) {
-              allUsers.push(...company.users.map((user: any) => ({ ...user, company })));
-            }
-          });
-          this.items = allUsers;
-          this.filtered = [...this.items];
-          this.loading = false;
-          this.error = '';
-          console.log('Users loaded from companies fallback:', this.items.length, 'items');
-        },
-        error: (err) => {
-          console.error('Fallback also failed:', err);
-          this.loading = false;
-          this.error = 'Impossible de charger les utilisateurs. Veuillez contacter l\'administrateur.';
-        }
-      });
-    } else {
-      this.loading = false;
-      this.error = 'Aucune donnée disponible. Veuillez contacter l\'administrateur.';
-    }
   }
 
   applySearch() {
@@ -359,12 +325,10 @@ export class UsersComponent implements OnInit {
     };
     if (this.form.password) payload.password = this.form.password;
 
-    // For non-super-admin users, force companyId to the current user's company
     if (!this.auth.isSuperAdmin()) {
       payload.companyId = this.auth.currentUser()?.companyId;
     }
 
-    // Super admin users creating or editing SUPER_ADMIN accounts do not need a companyId
     if (this.auth.isSuperAdmin() && this.form.role === 'SUPER_ADMIN') {
       delete payload.companyId;
     }

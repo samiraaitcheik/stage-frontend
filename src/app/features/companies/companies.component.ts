@@ -303,77 +303,59 @@ export class CompaniesComponent implements OnInit {
   }
 
   save() {
-    console.log('Save method called');
-    console.log('Editing:', this.editing);
-    console.log('Create mode:', this.createMode);
-    console.log('Show modal:', this.showModal);
-    
     if (this.editing) {
-      console.log('Editing mode - validating form');
-      this.errors = validateRequired(this.form as any, ['name']);
-      console.log('Form errors:', this.errors);
-      if (Object.keys(this.errors).length) {
-        console.log('Form validation failed');
+      // En mode édition, on sauvegarde selon l'onglet actif
+      if (this.editModalTab === 'license') {
+        this.saveEditLicense();
+        return;
+      }
+      if (this.editModalTab === 'users') {
+        this.saveEditUsers();
         return;
       }
 
+      // Onglet entreprise
+      this.errors = validateRequired(this.form as any, ['name']);
+      if (Object.keys(this.errors).length) return;
+
       this.service.update(this.editingId, this.form as UpdateCompanyPayload).subscribe({
         next: () => {
-          console.log('Company updated successfully');
           this.showModal = false;
           this.load();
           this.toastService.success('Entreprise modifiée avec succès');
         },
         error: (e: any) => {
-          console.error('Update error:', e);
           this.errors['api'] = e?.error?.error || 'Erreur serveur';
           this.toastService.error('Erreur lors de la modification');
         },
       });
     } else {
-      console.log('Create mode - createMode:', this.createMode);
       if (this.createMode === 'simple') {
-        console.log('Simple creation mode');
         this.errors = validateRequired(this.form as any, ['name']);
-        console.log('Form errors:', this.errors);
-        if (Object.keys(this.errors).length) {
-          console.log('Form validation failed');
-          return;
-        }
+        if (Object.keys(this.errors).length) return;
 
         this.superAdminService.createCompany(this.form).subscribe({
           next: () => {
-            console.log('Company created successfully');
             this.showModal = false;
             this.load();
             this.toastService.success('Entreprise créée avec succès');
           },
           error: (e: any) => {
-            console.error('Create error:', e);
             this.errors['api'] = e?.error?.error || 'Erreur serveur';
             this.toastService.error('Erreur lors de la création');
           },
         });
       } else {
-        console.log('Combined creation mode');
-        console.log('Combined form:', this.combinedForm);
         this.errors = this.validateCombinedForm();
-        console.log('Combined form errors:', this.errors);
-        if (Object.keys(this.errors).length) {
-          console.log('Combined form validation failed');
-          return;
-        }
+        if (Object.keys(this.errors).length) return;
 
-        console.log('Sending to API...');
         this.superAdminService.createCompanyWithLicenseAndUsers(this.combinedForm).subscribe({
           next: () => {
-            console.log('Company with license and users created successfully');
             this.showModal = false;
             this.load();
             this.toastService.success('Entreprise, licence et utilisateurs créés avec succès');
           },
           error: (e: any) => {
-            console.error('Combined create error:', e);
             this.errors['api'] = e?.error?.error || 'Erreur serveur';
             this.toastService.error('Erreur lors de la création');
           },
@@ -565,14 +547,22 @@ export class CompaniesComponent implements OnInit {
     const loadingId = this.toastService.loading('Modification des utilisateurs en cours...');
     
     // Valider les utilisateurs
-    const validUsers = this.editingUsers.filter(user => 
-      user.firstName?.trim() && 
-      user.lastName?.trim() && 
-      user.email?.trim()
-    );
+    const validUsers = this.editingUsers.filter((user) => {
+      const requiredOk =
+        user.firstName?.trim() &&
+        user.lastName?.trim() &&
+        user.email?.trim();
+      const passwordOk = user.id ? true : !!user.password?.trim();
+      return requiredOk && passwordOk;
+    });
 
     if (validUsers.length === 0) {
-      this.toastService.update(loadingId, 'Aucun utilisateur valide à sauvegarder', 'error', 4000);
+      this.toastService.update(
+        loadingId,
+        'Aucun utilisateur valide à sauvegarder (prénom/nom/email requis, et mot de passe requis pour un nouvel utilisateur)',
+        'error',
+        5000,
+      );
       return;
     }
 

@@ -247,14 +247,15 @@
                       </div>
                     </td>
                     <td class="py-3 text-center">
-                      <div class="btn-group" role="group">
-                        <button class="btn btn-sm btn-outline-primary"
-                                (click)="openEdit(item)"
+                      <div class="actions-wrapper">
+                        <button class="btn-custom-action btn-edit" 
+                                (click)="openEdit(item)" 
                                 title="Modifier">
                           <i class="bi bi-pencil"></i>
                         </button>
-                        <button class="btn btn-sm btn-outline-danger"
-                                (click)="delete(item.id)"
+
+                        <button class="btn-custom-action btn-delete" 
+                                (click)="delete(item.id)" 
                                 title="Supprimer">
                           <i class="bi bi-trash"></i>
                         </button>

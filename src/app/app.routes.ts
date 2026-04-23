@@ -33,11 +33,6 @@ export const routes: Routes = [
         loadComponent: () => import('./features/departments/departments.component').then(m => m.DepartmentsComponent)
       },
       {
-        path: 'departments-filter',
-        canActivate: [permissionGuard('organisation')],
-        loadComponent: () => import('./features/departments/departments-filter.component').then(m => m.DepartmentsFilterComponent)
-      },
-      {
         path: 'positions',
         canActivate: [permissionGuard('organisation')],
         loadComponent: () => import('./features/positions/positions.component').then(m => m.PositionsComponent)

@@ -40,8 +40,12 @@ export class LicensesComponent implements OnInit {
   editingId = '';
   search = '';
   companyFilterId = '';
+  statusFilter = '';
+  planFilter = '';
   showFilterPanel = false;
   pendingCompanyId = '';
+  pendingStatus = '';
+  pendingPlan = '';
   errors: FormErrors = {};
   queryCompanyId = '';
 
@@ -144,7 +148,9 @@ export class LicensesComponent implements OnInit {
       const matchesSearch = `${this.companyName(i.companyId)} ${i.planCode} ${i.status} ${i.billingCycle}`
         .toLowerCase().includes(q);
       const matchesCompany = this.companyFilterId ? i.companyId === this.companyFilterId : true;
-      return matchesSearch && matchesCompany;
+      const matchesStatus = this.statusFilter ? i.status === this.statusFilter : true;
+      const matchesPlan = this.planFilter ? i.planCode === this.planFilter : true;
+      return matchesSearch && matchesCompany && matchesStatus && matchesPlan;
     });
   }
 
@@ -153,8 +159,20 @@ export class LicensesComponent implements OnInit {
     this.applyFilters();
   }
 
+  clearStatusFilter() {
+    this.statusFilter = '';
+    this.applyFilters();
+  }
+
+  clearPlanFilter() {
+    this.planFilter = '';
+    this.applyFilters();
+  }
+
   openFilterPanel() {
     this.pendingCompanyId = this.companyFilterId;
+    this.pendingStatus = this.statusFilter;
+    this.pendingPlan = this.planFilter;
     this.showFilterPanel = true;
   }
 
@@ -170,14 +188,26 @@ export class LicensesComponent implements OnInit {
     return this.pendingCompanyId === companyId;
   }
 
+  togglePendingStatusSelection(status: LicenseStatus) {
+    this.pendingStatus = this.pendingStatus === status ? '' : status;
+  }
+
+  togglePendingPlanSelection(plan: LicensePlanCode) {
+    this.pendingPlan = this.pendingPlan === plan ? '' : plan;
+  }
+
   applyPendingFilters() {
     this.companyFilterId = this.pendingCompanyId;
+    this.statusFilter = this.pendingStatus;
+    this.planFilter = this.pendingPlan;
     this.applyFilters();
     this.showFilterPanel = false;
   }
 
   resetPendingFilters() {
     this.pendingCompanyId = '';
+    this.pendingStatus = '';
+    this.pendingPlan = '';
   }
 
   get isSuperAdmin(): boolean { return this.auth.isSuperAdmin(); }

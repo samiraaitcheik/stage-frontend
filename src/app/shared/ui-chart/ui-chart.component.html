@@ -1,0 +1,63 @@
+<article class="ui-chart-card">
+  <div class="ui-chart-head">
+    <div>
+      <h3>{{ title }}</h3>
+      <p *ngIf="subtitle">{{ subtitle }}</p>
+    </div>
+    <div class="ui-chart-total" *ngIf="hasData()">
+      {{ total() }}
+    </div>
+  </div>
+
+  <ng-container *ngIf="hasData(); else emptyState">
+    <div class="ui-chart-body" [class.bar-layout]="type === 'bar'">
+      <div class="donut-shell" *ngIf="type === 'donut'">
+        <svg viewBox="0 0 200 200" class="donut-svg" aria-hidden="true">
+          <circle cx="100" cy="100" r="72" class="donut-track"></circle>
+          <circle
+            *ngFor="let segment of donutSegments()"
+            cx="100"
+            cy="100"
+            r="72"
+            class="donut-segment"
+            [attr.stroke]="segment.color"
+            [attr.stroke-dasharray]="segment.dashArray"
+            [attr.stroke-dashoffset]="segment.dashOffset"
+          ></circle>
+        </svg>
+        <div class="donut-center">
+          <strong>{{ total() }}</strong>
+          <span>{{ centerLabel || title }}</span>
+        </div>
+      </div>
+
+      <div class="bars-shell" *ngIf="type === 'bar'">
+        <div class="bar-row" *ngFor="let item of barData()">
+          <div class="bar-labels">
+            <span>{{ item.label }}</span>
+            <strong>{{ item.value }}</strong>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" [style.width]="item.width" [style.background]="item.color"></div>
+          </div>
+          <small *ngIf="item.helper">{{ item.helper }}</small>
+        </div>
+      </div>
+
+      <div class="ui-chart-legend">
+        <div class="legend-row" *ngFor="let item of chartData()">
+          <span class="legend-dot" [style.background]="item.color"></span>
+          <span class="legend-text">
+            {{ item.label }}
+            <small *ngIf="item.helper">{{ item.helper }}</small>
+          </span>
+          <strong>{{ item.value }}</strong>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-template #emptyState>
+    <div class="ui-chart-empty">{{ emptyLabel }}</div>
+  </ng-template>
+</article>

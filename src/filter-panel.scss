@@ -117,6 +117,10 @@
 
 .filter-panel-body {
   padding: 20px 24px;
+  max-height: min(68vh, 560px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
 }
 .filter-section {
   margin-bottom: 20px;
@@ -138,6 +142,23 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.filter-panel-body::-webkit-scrollbar,
+.filter-options::-webkit-scrollbar {
+  width: 9px;
+}
+
+.filter-panel-body::-webkit-scrollbar-track,
+.filter-options::-webkit-scrollbar-track {
+  background: #eef2f7;
+  border-radius: 999px;
+}
+
+.filter-panel-body::-webkit-scrollbar-thumb,
+.filter-options::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #cbd5e1, #94a3b8);
+  border-radius: 999px;
 }
 
 .filter-option {

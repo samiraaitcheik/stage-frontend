@@ -97,12 +97,26 @@
                 <i class="bi bi-search"></i>
                 <input type="text" placeholder="Rechercher une licence..." [(ngModel)]="search" (input)="onSearch()" />
               </div>
-              <div class="active-filters" *ngIf="companyFilterId">
+              <div class="active-filters" *ngIf="companyFilterId || statusFilter || planFilter">
                 <div class="filter-chips">
-                  <span class="filter-chip">
+                  <span class="filter-chip" *ngIf="companyFilterId">
                     <i class="bi bi-building"></i>
                     {{ companyName(companyFilterId) }}
                     <button type="button" class="chip-remove" (click)="clearCompanyFilter()">
+                      <i class="bi bi-x"></i>
+                    </button>
+                  </span>
+                  <span class="filter-chip" *ngIf="statusFilter">
+                    <i class="bi bi-toggle-on"></i>
+                    {{ statusFilter }}
+                    <button type="button" class="chip-remove" (click)="clearStatusFilter()">
+                      <i class="bi bi-x"></i>
+                    </button>
+                  </span>
+                  <span class="filter-chip" *ngIf="planFilter">
+                    <i class="bi bi-stars"></i>
+                    {{ planFilter }}
+                    <button type="button" class="chip-remove" (click)="clearPlanFilter()">
                       <i class="bi bi-x"></i>
                     </button>
                   </span>
@@ -111,7 +125,9 @@
               <button class="btn-filter" *ngIf="isSuperAdmin" (click)="openFilterPanel()" [class.active]="showFilterPanel">
                 <i class="bi bi-funnel-fill"></i>
                 <span>Filtrer</span>
-                <span class="filter-badge" *ngIf="companyFilterId">1</span>
+                <span class="filter-badge" *ngIf="companyFilterId || statusFilter || planFilter">
+                  {{ (companyFilterId ? 1 : 0) + (statusFilter ? 1 : 0) + (planFilter ? 1 : 0) }}
+                </span>
               </button>
             </div>
           </div>
@@ -301,6 +317,32 @@
                 (click)="togglePendingCompanySelection(company.id)">
           <i class="bi" [ngClass]="isPendingCompanySelected(company.id) ? 'bi-check-circle-fill' : 'bi-circle'"></i>
           <span>{{ company.name }}</span>
+        </button>
+      </div>
+    </div>
+    <div class="filter-section">
+      <h5><i class="bi bi-toggle-on"></i> Statut</h5>
+      <div class="filter-options">
+        <button type="button"
+                class="filter-option"
+                *ngFor="let status of statusOptions"
+                [class.active]="pendingStatus === status"
+                (click)="togglePendingStatusSelection(status)">
+          <i class="bi" [ngClass]="pendingStatus === status ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+          <span>{{ status }}</span>
+        </button>
+      </div>
+    </div>
+    <div class="filter-section">
+      <h5><i class="bi bi-stars"></i> Plan</h5>
+      <div class="filter-options">
+        <button type="button"
+                class="filter-option"
+                *ngFor="let plan of planOptions"
+                [class.active]="pendingPlan === plan"
+                (click)="togglePendingPlanSelection(plan)">
+          <i class="bi" [ngClass]="pendingPlan === plan ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+          <span>{{ plan }}</span>
         </button>
       </div>
     </div>

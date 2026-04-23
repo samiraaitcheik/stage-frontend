@@ -1,0 +1,202 @@
+.ui-chart-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 28px;
+  padding: 1.4rem;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.07);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.ui-chart-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+
+  h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  p {
+    margin: 0.35rem 0 0;
+    color: #64748b;
+    font-size: 0.82rem;
+  }
+}
+
+.ui-chart-total {
+  min-width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.ui-chart-body {
+  display: grid;
+  grid-template-columns: minmax(180px, 220px) 1fr;
+  gap: 1.4rem;
+  align-items: center;
+}
+
+.ui-chart-body.bar-layout {
+  grid-template-columns: 1.3fr 0.9fr;
+  align-items: start;
+}
+
+.donut-shell {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.donut-svg {
+  width: 200px;
+  height: 200px;
+  transform: rotate(-90deg);
+}
+
+.donut-track,
+.donut-segment {
+  fill: none;
+  stroke-width: 18;
+  stroke-linecap: round;
+}
+
+.donut-track {
+  stroke: #edf2f7;
+}
+
+.donut-center {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  text-align: center;
+
+  strong {
+    display: block;
+    color: #0f172a;
+    font-size: 2rem;
+    line-height: 1;
+  }
+
+  span {
+    margin-top: 0.35rem;
+    color: #64748b;
+    font-size: 0.82rem;
+  }
+}
+
+.bars-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.bar-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.bar-labels {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+
+  span {
+    color: #334155;
+    font-size: 0.88rem;
+    font-weight: 600;
+  }
+
+  strong {
+    color: #0f172a;
+    font-size: 0.92rem;
+  }
+}
+
+.bar-track {
+  height: 12px;
+  background: #eff3f8;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  transition: width 0.35s ease;
+}
+
+.bar-row small,
+.legend-text small {
+  display: block;
+  color: #94a3b8;
+  font-size: 0.74rem;
+  margin-top: 0.14rem;
+}
+
+.ui-chart-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.legend-row {
+  display: grid;
+  grid-template-columns: 12px 1fr auto;
+  gap: 0.7rem;
+  align-items: center;
+  color: #334155;
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+}
+
+.legend-text {
+  font-size: 0.87rem;
+  font-weight: 600;
+}
+
+.legend-row strong {
+  font-size: 0.87rem;
+  color: #0f172a;
+}
+
+.ui-chart-empty {
+  min-height: 240px;
+  display: grid;
+  place-items: center;
+  color: #94a3b8;
+  font-size: 0.92rem;
+  border: 1px dashed #dbe3ed;
+  border-radius: 22px;
+  background: linear-gradient(180deg, #fcfdff 0%, #f8fafc 100%);
+}
+
+@media (max-width: 900px) {
+  .ui-chart-body,
+  .ui-chart-body.bar-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .donut-svg {
+    width: 180px;
+    height: 180px;
+  }
+}

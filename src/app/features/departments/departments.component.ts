@@ -27,7 +27,9 @@ export class DepartmentsComponent implements OnInit {
   editingId = '';
   search    = '';
   selectedCompanyId = '';
+  activityFilter = '';
   pendingCompanyId = '';
+  pendingActivity = '';
   showFilterPanel = false;
   errors: FormErrors = {};
 
@@ -84,11 +86,13 @@ export class DepartmentsComponent implements OnInit {
 
   openFilterPanel() {
     this.pendingCompanyId = this.selectedCompanyId;
+    this.pendingActivity = this.activityFilter;
     this.showFilterPanel = true;
   }
 
   closeFilterPanel() {
     this.pendingCompanyId = this.selectedCompanyId;
+    this.pendingActivity = this.activityFilter;
     this.showFilterPanel = false;
   }
 
@@ -102,12 +106,14 @@ export class DepartmentsComponent implements OnInit {
 
   applyPendingFilters() {
     this.selectedCompanyId = this.pendingCompanyId;
+    this.activityFilter = this.pendingActivity;
     this.applyFilters();
     this.closeFilterPanel();
   }
 
   resetPendingFilters() {
     this.pendingCompanyId = '';
+    this.pendingActivity = '';
   }
 
   removePendingCompanies() {
@@ -119,13 +125,23 @@ export class DepartmentsComponent implements OnInit {
     this.applyFilters();
   }
 
+  togglePendingActivitySelection(value: string) {
+    this.pendingActivity = this.pendingActivity === value ? '' : value;
+  }
+
+  clearActivityFilter() {
+    this.activityFilter = '';
+    this.applyFilters();
+  }
+
   applyFilters() {
     const q = this.search.toLowerCase();
     this.filtered = this.items.filter(i => {
       const matchesSearch = `${i.name} ${i.code ?? ''} ${i.description ?? ''}`
         .toLowerCase().includes(q);
       const matchesCompany = this.selectedCompanyId ? i.companyId === this.selectedCompanyId : true;
-      return matchesSearch && matchesCompany;
+      const matchesActivity = this.activityFilter ? String(i.isActive) === this.activityFilter : true;
+      return matchesSearch && matchesCompany && matchesActivity;
     });
   }
 

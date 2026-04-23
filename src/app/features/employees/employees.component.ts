@@ -36,8 +36,12 @@ export class EmployeesComponent implements OnInit {
   editingId = '';
   search    = '';
   companyFilterId = '';
+  departmentFilterId = '';
+  statusFilter = '';
   showFilterPanel = false;
   pendingCompanyId = '';
+  pendingDepartmentId = '';
+  pendingStatus = '';
   errors: FormErrors = {};
 
   readonly statusOptions = EMPLOYEE_STATUS_OPTIONS;
@@ -98,7 +102,9 @@ export class EmployeesComponent implements OnInit {
       const matchesSearch = `${i.firstName} ${i.lastName} ${i.email ?? ''} ${i.cin ?? ''} ${i.matricule ?? ''}`
         .toLowerCase().includes(q);
       const matchesCompany = this.companyFilterId ? i.companyId === this.companyFilterId : true;
-      return matchesSearch && matchesCompany;
+      const matchesDepartment = this.departmentFilterId ? i.departmentId === this.departmentFilterId : true;
+      const matchesStatus = this.statusFilter ? i.status === this.statusFilter : true;
+      return matchesSearch && matchesCompany && matchesDepartment && matchesStatus;
     });
   }
 
@@ -107,8 +113,20 @@ export class EmployeesComponent implements OnInit {
     this.applyFilters();
   }
 
+  clearDepartmentFilter() {
+    this.departmentFilterId = '';
+    this.applyFilters();
+  }
+
+  clearStatusFilter() {
+    this.statusFilter = '';
+    this.applyFilters();
+  }
+
   openFilterPanel() {
     this.pendingCompanyId = this.companyFilterId;
+    this.pendingDepartmentId = this.departmentFilterId;
+    this.pendingStatus = this.statusFilter;
     this.showFilterPanel = true;
   }
 
@@ -118,20 +136,42 @@ export class EmployeesComponent implements OnInit {
 
   togglePendingCompanySelection(companyId: string) {
     this.pendingCompanyId = this.pendingCompanyId === companyId ? '' : companyId;
+    if (this.pendingCompanyId !== companyId && this.pendingDepartmentId) {
+      const department = this.departments.find(d => d.id === this.pendingDepartmentId);
+      if (department && department.companyId === companyId) {
+        this.pendingDepartmentId = '';
+      }
+    }
   }
 
   isPendingCompanySelected(companyId: string): boolean {
     return this.pendingCompanyId === companyId;
   }
 
+  togglePendingDepartmentSelection(departmentId: string) {
+    this.pendingDepartmentId = this.pendingDepartmentId === departmentId ? '' : departmentId;
+  }
+
+  isPendingDepartmentSelected(departmentId: string): boolean {
+    return this.pendingDepartmentId === departmentId;
+  }
+
+  togglePendingStatusSelection(status: string) {
+    this.pendingStatus = this.pendingStatus === status ? '' : status;
+  }
+
   applyPendingFilters() {
     this.companyFilterId = this.pendingCompanyId;
+    this.departmentFilterId = this.pendingDepartmentId;
+    this.statusFilter = this.pendingStatus;
     this.applyFilters();
     this.showFilterPanel = false;
   }
 
   resetPendingFilters() {
     this.pendingCompanyId = '';
+    this.pendingDepartmentId = '';
+    this.pendingStatus = '';
   }
 
   openCreate() {
@@ -219,6 +259,11 @@ export class EmployeesComponent implements OnInit {
   get filteredDepartments(): Department[] {
     if (!this.form.companyId) return this.departments;
     return this.departments.filter(d => d.companyId === this.form.companyId);
+  }
+
+  get filterDepartments(): Department[] {
+    if (!this.pendingCompanyId) return this.departments;
+    return this.departments.filter(d => d.companyId === this.pendingCompanyId);
   }
 
   get currentCompanyName(): string {

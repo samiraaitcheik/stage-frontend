@@ -58,7 +58,6 @@ export class UsersComponent implements OnInit {
   error = '';
   showPassword = false;
   queryCompanyId = '';
-  activeFilterTab = 'company';
   toast = '';
   toastTimer: any;
 
@@ -200,10 +199,6 @@ export class UsersComponent implements OnInit {
     this.pendingCompanyFilterId = '';
     this.pendingRoleFilter = '';
     this.pendingStatusFilter = '';
-  }
-
-  selectFilterTab(tab: string) {
-    this.activeFilterTab = tab;
   }
 
   clearCompanyFilter() {

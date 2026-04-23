@@ -1,172 +1,174 @@
-<div class="page-header">
-  <div>
-    <h1>Tableau de bord</h1>
-    <p class="page-subtitle">Bienvenue sur votre espace de gestion RH</p>
-  </div>
-</div>
-
-<div *ngIf="loading" class="loading-spinner"></div>
-
-<ng-container *ngIf="!loading">
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-icon purple">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
-          <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
-        </svg>
-      </div>
-      <div class="stat-content">
-        <div class="stat-value">{{ stats.employees }}</div>
-        <div class="stat-label">Employés</div>
-      </div>
+<section class="dashboard-page">
+  <header class="dashboard-topbar">
+    <div class="topbar-copy">
+      <span class="hero-kicker">{{ auth.isSuperAdmin() ? 'Vue super admin' : 'Espace entreprise' }}</span>
+      <h1>{{ heroTitle }}</h1>
+      <p>{{ heroDescription }}</p>
     </div>
 
-    <div class="stat-card">
-      <div class="stat-icon blue">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-        </svg>
+    <div class="topbar-aside">
+      <div class="hero-chip">
+        <i class="bi bi-buildings"></i>
+        <span>{{ companyHealthLabel }}</span>
       </div>
-      <div class="stat-content">
-        <div class="stat-value">{{ stats.departments }}</div>
-        <div class="stat-label">Départements</div>
-      </div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-icon green">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <path d="M3 21h18M5 21V7l7-4 7 4v14"/>
-        </svg>
-      </div>
-      <div class="stat-content">
-        <div class="stat-value">{{ stats.companies }}</div>
-        <div class="stat-label">Entreprises</div>
+      <div class="hero-chip">
+        <i class="bi bi-person-badge"></i>
+        <span>{{ auth.currentUser()?.firstName }} {{ auth.currentUser()?.lastName }}</span>
       </div>
     </div>
+  </header>
 
-    <div class="stat-card">
-      <div class="stat-icon yellow">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
-        </svg>
-      </div>
-      <div class="stat-content">
-        <div class="stat-value">{{ stats.attendances }}</div>
-        <div class="stat-label">Présences enregistrées</div>
-      </div>
-    </div>
-
-   
-
-    <div class="stat-card">
-      <div class="stat-icon blue">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-          <polyline points="14 2 14 8 20 8"/>
-        </svg>
-      </div>
-      <div class="stat-content">
-        <div class="stat-value">{{ stats.contracts }}</div>
-        <div class="stat-label">Contrats actifs</div>
-      </div>
-    </div>
+  <div *ngIf="loading" class="loading-panel">
+    <div class="loading-spinner"></div>
+    <p>Chargement du tableau de bord...</p>
   </div>
 
-  <div class="quick-links">
-    <h2 class="section-title">Accès rapide</h2>
-    <div class="quick-grid">
-      <a routerLink="/employees" class="quick-card">
-        <div class="quick-icon purple">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="24">
-            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
-          </svg>
+  <ng-container *ngIf="!loading">
+    <div class="metrics-grid">
+      <article class="metric-card" *ngFor="let item of metrics" [attr.data-tone]="item.tone">
+        <div class="metric-icon">
+          <i class="bi" [ngClass]="item.icon"></i>
         </div>
-        <span>Gérer les employés</span>
-        <svg class="arrow" viewBox="0 0 20 20" fill="currentColor" width="16">
-          <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-        </svg>
-      </a>
-
-      <a routerLink="/attendance" class="quick-card">
-        <div class="quick-icon yellow">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="24">
-            <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
-          </svg>
+        <div class="metric-content">
+          <span>{{ item.label }}</span>
+          <strong>{{ item.value }}</strong>
+          <small>{{ item.helper }}</small>
         </div>
-        <span>Suivi des présences</span>
-        <svg class="arrow" viewBox="0 0 20 20" fill="currentColor" width="16">
-          <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-        </svg>
-      </a>
-
-      <a routerLink="/contracts" class="quick-card">
-        <div class="quick-icon blue">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="24">
-            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/>
-            <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
-          </svg>
-        </div>
-        <span>Consulter les contrats</span>
-        <svg class="arrow" viewBox="0 0 20 20" fill="currentColor" width="16">
-          <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-        </svg>
-      </a>
+      </article>
     </div>
-  </div>
 
-  <div class="charts-section">
-    <h2 class="section-title">Analyses</h2>
-    <div class="charts-grid">
-      <div class="chart-card">
-        <div class="chart-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-            <path d="M13 2H3v20h18V9z"/><polyline points="13 2 13 9 20 9"/>
-          </svg>
-          Répartition des employés
-        </div>
-        <div class="chart-container">
-          <svg viewBox="0 0 200 200" style="width: 100%; height: 100%;">
-            <!-- Simple pie chart -->
-            <circle cx="100" cy="100" r="80" fill="none" stroke="#6366f1" stroke-width="20" stroke-dasharray="150.8 503.3" stroke-dashoffset="0"/>
-            <circle cx="100" cy="100" r="80" fill="none" stroke="#3b82f6" stroke-width="20" stroke-dasharray="167.6 503.3" stroke-dashoffset="-150.8"/>
-            <circle cx="100" cy="100" r="80" fill="none" stroke="#10b981" stroke-width="20" stroke-dasharray="184.9 503.3" stroke-dashoffset="-318.4"/>
-          </svg>
-        </div>
-        <div class="chart-legend">
-          <div class="legend-item"><span class="legend-dot purple"></span>Actifs ({{ stats.employees }})</div>
-          <div class="legend-item"><span class="legend-dot blue"></span>Congés (0)</div>
-          <div class="legend-item"><span class="legend-dot green"></span>Disponibles ({{ stats.employees }})</div>
-        </div>
-      </div>
-
-      <div class="chart-card">
-        <div class="chart-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-            <path d="M9 11l3 3L22 4"/><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-          État des contrats
-        </div>
-        <div class="chart-container">
-          <div style="display: flex; align-items: center; justify-content: space-around; height: 100%;">
-            <div class="stat-mini">
-              <div class="stat-mini-value">{{ stats.contracts }}</div>
-              <div class="stat-mini-label">Actifs</div>
-            </div>
-            <div class="stat-mini">
-              <div class="stat-mini-value">0</div>
-              <div class="stat-mini-label">Expirés</div>
-            </div>
-            <div class="stat-mini">
-              <div class="stat-mini-value">0</div>
-              <div class="stat-mini-label">À renouveler</div>
-            </div>
+    <div class="dashboard-shell">
+      <section class="panel-block summary-panel">
+        <div class="section-heading">
+          <div>
+            <h2>Resume executif</h2>
+            <p>Les informations les plus importantes pour piloter rapidement l activite.</p>
           </div>
         </div>
-      </div>
+
+        <div class="summary-grid">
+          <article class="highlight-card major-highlight" *ngFor="let item of highlights">
+            <span>{{ item.eyebrow }}</span>
+            <strong>{{ item.value }}</strong>
+            <h3>{{ item.title }}</h3>
+            <p>{{ item.description }}</p>
+          </article>
+        </div>
+
+        <div class="featured-chart-row">
+          <app-ui-chart
+            [title]="'Effectif par statut'"
+            [subtitle]="'Lecture immediate de la repartition de vos employes.'"
+            [type]="'donut'"
+            [centerLabel]="'Employes'"
+            [data]="primaryChart"
+          />
+
+          <app-ui-chart
+            [title]="'Statut des contrats'"
+            [subtitle]="'Etat actuel des contrats en cours dans la base.'"
+            [type]="'bar'"
+            [data]="contractChart"
+          />
+        </div>
+      </section>
+
+      <aside class="side-column">
+        <section class="panel-block quick-access">
+          <div class="section-heading">
+            <div>
+              <h2>Acces rapide</h2>
+              <p>Raccourcis vers les zones les plus utilisees.</p>
+            </div>
+          </div>
+
+          <div class="quick-stack">
+            <a *ngFor="let link of visibleQuickLinks" class="quick-card compact" [routerLink]="link.route">
+              <div class="quick-icon">
+                <i class="bi" [ngClass]="link.icon"></i>
+              </div>
+              <div>
+                <h3>{{ link.title }}</h3>
+                <p>{{ link.description }}</p>
+              </div>
+              <i class="bi bi-arrow-up-right"></i>
+            </a>
+          </div>
+        </section>
+
+        <section class="panel-block insights-panel">
+          <div class="section-heading">
+            <div>
+              <h2>Lecture rapide</h2>
+              <p>Quelques points cles a verifier en priorite.</p>
+            </div>
+          </div>
+
+          <div class="insight-list">
+            <div class="insight-row">
+              <span>Employes actifs</span>
+              <strong>{{ metrics[0].helper }}</strong>
+            </div>
+            <div class="insight-row">
+              <span>Contrats actifs</span>
+              <strong>{{ metrics[4].helper }}</strong>
+            </div>
+            <div class="insight-row">
+              <span>Volume de presences</span>
+              <strong>{{ metrics[3].value }}</strong>
+            </div>
+            <div class="insight-row" *ngIf="auth.isSuperAdmin()">
+              <span>Etat des licences</span>
+              <strong>{{ metrics[5].helper }}</strong>
+            </div>
+          </div>
+        </section>
+      </aside>
     </div>
-  </div>
-</ng-container>
+
+    <section class="panel-block analytics-block">
+      <div class="section-heading">
+        <div>
+          <h2>Analyses detaillees</h2>
+          <p>Graphiques bases sur les donnees recuperees en temps reel.</p>
+        </div>
+      </div>
+
+      <div class="analytics-grid">
+        <app-ui-chart
+          [title]="'Presences enregistrees'"
+          [subtitle]="'Resume des statuts de presence deja saisis.'"
+          [type]="'bar'"
+          [data]="attendanceChart"
+        />
+
+        <app-ui-chart
+          *ngIf="auth.isSuperAdmin(); else departmentChart"
+          [title]="'Portefeuille entreprises'"
+          [subtitle]="'Vision du parc d entreprises par statut global.'"
+          [type]="'donut'"
+          [centerLabel]="'Entreprises'"
+          [data]="companyStatusChart"
+        />
+
+        <ng-template #departmentChart>
+          <app-ui-chart
+            [title]="'Departements les plus charges'"
+            [subtitle]="'Les equipes qui concentrent le plus d effectifs.'"
+            [type]="'bar'"
+            [data]="topDepartments"
+          />
+        </ng-template>
+
+        <app-ui-chart
+          *ngIf="auth.isSuperAdmin()"
+          [title]="'Cycle des licences'"
+          [subtitle]="'Licences actives, en essai et expirees de la plateforme.'"
+          [type]="'donut'"
+          [centerLabel]="'Licences'"
+          [data]="licenseChart"
+        />
+      </div>
+    </section>
+  </ng-container>
+</section>

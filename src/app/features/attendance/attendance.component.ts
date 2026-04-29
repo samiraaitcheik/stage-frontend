@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { AttendanceService, EmployeeService, CompanyService, DepartmentService } from '../../core/services/domain.services';
 import { AuthService } from '../../core/services/auth.service';
 import { ATTENDANCE_STATUS_OPTIONS, Company } from '../../core/models';
+import { SearchableSelectComponent } from '../../shared/searchable-select.component';
 
 @Component({
   selector: 'app-attendance',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SearchableSelectComponent],
   templateUrl: './attendance.component.html',
   styleUrls: ['./attendance.component.scss']
 })
@@ -41,7 +42,7 @@ export class AttendanceComponent implements OnInit {
     private companyService: CompanyService,
     private departmentService: DepartmentService,
     private auth: AuthService,
-    private cdr: ChangeDetectorRef // Bach l-modal t-reagi de suite
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -56,7 +57,10 @@ export class AttendanceComponent implements OnInit {
   loadEmployees() {
     this.employeeService.getAll().subscribe({
       next: (data) => {
-        this.employees = data;
+        this.employees = data.map(emp => ({
+          ...emp,
+          displayName: `${emp.firstName} ${emp.lastName} ${emp.employeeCode ? '(' + emp.employeeCode + ')' : ''}`
+        }));
         this.filteredEmployees = [...this.employees];
         this.cdr.detectChanges();
       },
@@ -65,7 +69,9 @@ export class AttendanceComponent implements OnInit {
   }
 
   loadCompanies() {
-    this.companyService.getAll().subscribe({ next: (data) => { this.companies = data; } });
+    this.companyService.getAll().subscribe({ 
+      next: (data) => { this.companies = data; } 
+    });
   }
 
   loadDepartments() {
@@ -83,19 +89,16 @@ export class AttendanceComponent implements OnInit {
     // Filter employees based on selected department
     if (this.form.departmentId) {
       this.filteredEmployees = this.employees.filter(emp => emp.departmentId === this.form.departmentId);
-      console.log('Filtered employees by department:', this.form.departmentId, this.filteredEmployees.length);
     } else {
       this.filteredEmployees = [...this.employees];
-      console.log('All employees shown');
     }
     
     // Clear employee selection if it doesn't match the filtered list
     if (this.form.employeeId && !this.filteredEmployees.find(emp => emp.id === this.form.employeeId)) {
       this.form.employeeId = '';
     }
+    this.cdr.detectChanges();
   }
-
-
 
   load() {
     this.loading = true;
@@ -180,7 +183,7 @@ export class AttendanceComponent implements OnInit {
   }
 
   companyName(id: string): string {
-    return this.companies.find(c => c.id === id)?.name ?? 'â';
+    return this.companies.find(c => c.id === id)?.name ?? '—';
   }
 
   get isSuperAdmin(): boolean {
@@ -205,9 +208,9 @@ export class AttendanceComponent implements OnInit {
     this.editing = false; 
     this.editingId = ''; 
     this.error = '';
+    this.filteredEmployees = [...this.employees];
     this.showModal = true;
-    this.filteredEmployees = [...this.employees]; // Reset filtered employees
-    this.cdr.detectChanges(); // Force display
+    this.cdr.detectChanges();
   }
 
   openEdit(item: any) {
@@ -222,12 +225,12 @@ export class AttendanceComponent implements OnInit {
       lateMinutes: item.lateMinutes ?? null,
       notes: item.notes ?? ''
     };
-    this.onDepartmentChange(); // Apply department filter
+    this.onDepartmentChange();
     this.editing = true; 
     this.editingId = item.id; 
     this.error = '';
     this.showModal = true;
-    this.cdr.detectChanges(); // Force display
+    this.cdr.detectChanges();
   }
 
   save() {
@@ -296,15 +299,10 @@ export class AttendanceComponent implements OnInit {
   }
 
   formatDateToISO(dateString: string): string {
-    // Convert from DD/MM/YYYY to YYYY-MM-DD format
     if (!dateString) return '';
-    
-    // Check if already in ISO format
     if (dateString.includes('-')) {
       return new Date(dateString).toISOString();
     }
-    
-    // Parse DD/MM/YYYY format
     const parts = dateString.split('/');
     if (parts.length === 3) {
       const day = parts[0].padStart(2, '0');
@@ -313,7 +311,6 @@ export class AttendanceComponent implements OnInit {
       const isoDate = `${year}-${month}-${day}`;
       return new Date(isoDate).toISOString();
     }
-    
     return new Date(dateString).toISOString();
   }
 }

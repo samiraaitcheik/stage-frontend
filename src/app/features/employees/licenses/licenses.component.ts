@@ -2,12 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { LicenseService, CompanyService, SuperAdminService } from '../../core/services/domain.services';
-import { AuthService } from '../../core/services/auth.service';
+import { LicenseService, CompanyService, SuperAdminService } from '../../../core/services/domain.services';
+import { AuthService } from '../../../core/services/auth.service';
 import {
   License, Company,
   LicensePlanCode, LicenseStatus, BillingCycle,
-} from '../../core/models';
+} from '../../../core/models';
 
 type FormErrors = Record<string, string>;
 

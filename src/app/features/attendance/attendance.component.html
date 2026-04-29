@@ -37,12 +37,14 @@
       </button>
     </div>
   </div>
-    <div *ngIf="loading" class="loading-spinner"></div>
-    <div class="table-scroll" *ngIf="!loading">
-      <table *ngIf="filtered.length > 0">
-        <thead>
-          <tr>
-            <th>Employé</th>
+
+  <div *ngIf="loading" class="loading-spinner"></div>
+  
+  <div class="table-scroll" *ngIf="!loading">
+    <table *ngIf="filtered.length > 0">
+      <thead>
+        <tr>
+          <th>Employé</th>
           <th>Date</th>
           <th>Statut</th>
           <th>Heures travaillées</th>
@@ -54,8 +56,8 @@
       <tbody>
         <tr *ngFor="let item of filtered">
           <td>
-            <div class="emp-cell" style="display: flex; align-items: center; gap: 10px;">
-              <div class="emp-avatar" style="width: 32px; height: 32px; border-radius: 50%; background: #e0e7ff; color: #4338ca; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.8rem;">
+            <div class="emp-cell">
+              <div class="emp-avatar">
                 {{ getEmployeeName(item.employeeId).charAt(0) }}
               </div>
               <strong>{{ getEmployeeName(item.employeeId) }}</strong>
@@ -63,9 +65,9 @@
           </td>
           <td>{{ item.date | date:'dd/MM/yyyy' }}</td>
           <td><span class="badge" [ngClass]="statusClass(item.status)">{{ statusLabel(item.status) }}</span></td>
-          <td>{{ item.workedHours ?? 'â' }}h</td>
-          <td>{{ item.overtimeHours ?? 'â' }}h</td>
-          <td>{{ item.lateMinutes ?? 'â' }} min</td>
+          <td>{{ item.workedHours ?? '—' }}h</td>
+          <td>{{ item.overtimeHours ?? '—' }}h</td>
+          <td>{{ item.lateMinutes ?? '—' }} min</td>
           <td>
             <div class="actions">
               <button class="btn btn-icon btn-secondary" (click)="openEdit(item)"><i class="bi bi-pencil"></i></button>
@@ -77,13 +79,14 @@
     </table>
     
     <div class="empty-state" *ngIf="filtered.length === 0">
-      <i class="bi bi-calendar-x" style="font-size:2.5rem;color:#9ca3af;"></i>
+      <i class="bi bi-calendar-x"></i>
       <h3>Aucune présence</h3>
       <p>Commencez par ajouter un enregistrement.</p>
     </div>
   </div>
 </div>
 
+<!-- Filter Panel -->
 <div class="filter-panel" *ngIf="isSuperAdmin && showFilterPanel">
   <div class="filter-panel-header">
     <h4>Filtres</h4>
@@ -124,40 +127,45 @@
   </div>
 </div>
 
+<!-- MODAL CREATE / EDIT -->
 <div class="modal-overlay" *ngIf="showModal" (click)="close()">
-  <div class="modal modal-lg show" (click)="$event.stopPropagation()">
+  <div class="modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h3>
-        <i class="bi bi-calendar-check" style="color:#6366f1;"></i> 
+        <i class="bi bi-calendar-check"></i> 
         {{ editing ? 'Modifier la présence' : 'Ajouter une présence' }}
       </h3>
       <button class="btn btn-icon btn-secondary" (click)="close()"><i class="bi bi-x-lg"></i></button>
     </div>
 
     <div class="modal-body">
-      <div class="api-error" *ngIf="error" style="background: #fef2f2; color: #b91c1c; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9rem;">
+      <div class="api-error" *ngIf="error">
         <i class="bi bi-exclamation-triangle-fill"></i> {{ error }}
       </div>
 
-
       <div class="form-section-title"><i class="bi bi-info-circle"></i> Informations Générales</div>
-      <div class="form-group" style="margin-bottom: 1.25rem;">
+      
+      <div class="form-group">
         <label><i class="bi bi-building"></i> Département</label>
-        <select [(ngModel)]="form.departmentId" (change)="onDepartmentChange()">
-          <option value="">-- Tous les départements --</option>
-          <option *ngFor="let dept of departments" [value]="dept.id">
-            {{ dept.name }}
-          </option>
-        </select>
+        <app-searchable-select
+          [items]="departments"
+          displayField="name"
+          valueField="id"
+          [(ngModel)]="form.departmentId"
+          (valueChange)="onDepartmentChange()"
+          placeholder="-- Tous les départements --">
+        </app-searchable-select>
       </div>
-      <div class="form-group" style="margin-bottom: 1.25rem;">
+
+      <div class="form-group">
         <label><i class="bi bi-person"></i> Employé <span class="required">*</span></label>
-        <select [(ngModel)]="form.employeeId">
-          <option value="" disabled>-- Sélectionner un employé --</option>
-          <option *ngFor="let e of filteredEmployees" [value]="e.id">
-            {{ e.firstName }} {{ e.lastName }} {{ e.employeeCode ? '(' + e.employeeCode + ')' : '' }}
-          </option>
-        </select>
+        <app-searchable-select
+          [items]="filteredEmployees"
+          displayField="displayName"
+          valueField="id"
+          [(ngModel)]="form.employeeId"
+          placeholder="-- Sélectionner un employé --">
+        </app-searchable-select>
       </div>
 
       <div class="form-row">
@@ -174,7 +182,7 @@
       </div>
 
       <div class="form-section-title"><i class="bi bi-clock"></i> Temps de travail</div>
-      <div class="form-row" style="grid-template-columns: 1fr 1fr 1fr;">
+      <div class="form-row-three">
         <div class="form-group">
           <label><i class="bi bi-hourglass-split"></i> Heures trav.</label>
           <input type="number" step="0.5" [(ngModel)]="form.workedHours" placeholder="ex: 8" />
@@ -189,7 +197,7 @@
         </div>
       </div>
 
-      <div class="form-group" style="margin-top: 1.25rem;">
+      <div class="form-group">
         <label><i class="bi bi-sticky"></i> Notes</label>
         <input type="text" [(ngModel)]="form.notes" placeholder="Remarques éventuelles..." />
       </div>

@@ -55,7 +55,7 @@ export const routes: Routes = [
       {
         path: 'licenses',
         canActivate: [permissionGuard('licenses')],
-        loadComponent: () => import('./features/licenses/licenses.component').then(m => m.LicensesComponent)
+        loadComponent: () => import('./features/employees/licenses/licenses.component').then(m => m.LicensesComponent)
       },
       {
         path: 'variable-items',

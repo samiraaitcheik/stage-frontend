@@ -1,3 +1,4 @@
+<!-- src/app/features/employees/employees.component.html -->
 <div class="page-header">
   <div>
     <h1>Employés</h1>
@@ -89,6 +90,9 @@
           <td><span class="badge badge-status-{{item.status.toLowerCase()}}">{{ item.status }}</span></td>
           <td>
             <div class="actions">
+              <button class="btn btn-icon btn-eye" (click)="openInfo(item)" title="Informations">
+                <i class="bi bi-eye"></i>
+              </button>
               <button class="btn btn-icon btn-secondary" (click)="openEdit(item)" title="Modifier">
                 <i class="bi bi-pencil"></i>
               </button>
@@ -109,6 +113,7 @@
   </div>
 </div>
 
+<!-- Filter Panel -->
 <div class="filter-panel" *ngIf="isSuperAdmin && showFilterPanel">
   <div class="filter-panel-header">
     <h4>Filtres</h4>
@@ -158,176 +163,238 @@
   </div>
 </div>
 
-<div class="modal-overlay" *ngIf="showModal" (click)="close()">
-  <div class="modal-content-custom" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h3>
-        <i class="bi bi-person-badge"></i>
-        {{ editing ? 'Modifier' : 'Ajouter' }} – Employé
-      </h3>
-      <button class="btn btn-icon btn-secondary" (click)="close()">
+<!-- MODAL INFO EMPLOYÉ -->
+<div class="modal-overlay" *ngIf="showInfoModal" (click)="closeInfo()">
+  <div class="modal-info-panel" (click)="$event.stopPropagation()">
+    <div class="info-panel-header">
+      <div class="info-avatar">
+        {{ infoEmployee?.firstName?.charAt(0) }}{{ infoEmployee?.lastName?.charAt(0) }}
+      </div>
+      <div class="info-header-text">
+        <h3>{{ infoEmployee?.firstName }} {{ infoEmployee?.lastName }}</h3>
+        <p>{{ positionName(infoEmployee?.positionId) }} · {{ departmentName(infoEmployee?.departmentId) }}</p>
+        <span class="badge badge-status-{{infoEmployee?.status?.toLowerCase()}}">{{ infoEmployee?.status }}</span>
+      </div>
+      <button class="btn btn-icon btn-secondary info-close-btn" (click)="closeInfo()">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
+    <div class="info-panel-body">
+      <div class="info-tabs">
+        <button class="info-tab" [class.active]="infoTab === 'personnel'" (click)="infoTab = 'personnel'">
+          <i class="bi bi-person-vcard"></i> Identité
+        </button>
+        <button class="info-tab" [class.active]="infoTab === 'contact'" (click)="infoTab = 'contact'">
+          <i class="bi bi-telephone"></i> Contact
+        </button>
+        <button class="info-tab" [class.active]="infoTab === 'pro'" (click)="infoTab = 'pro'">
+          <i class="bi bi-briefcase"></i> Professionnel
+        </button>
+        <button class="info-tab" [class.active]="infoTab === 'salaire'" (click)="infoTab = 'salaire'">
+          <i class="bi bi-cash-stack"></i> Salaire
+        </button>
+      </div>
+      <div class="info-tab-content" *ngIf="infoTab === 'personnel'">
+        <div class="info-grid">
+          <div class="info-field"><span class="info-label">Prénom</span><span class="info-value">{{ infoEmployee?.firstName ?? '—' }}</span></div>
+          <div class="info-field"><span class="info-label">Nom</span><span class="info-value">{{ infoEmployee?.lastName ?? '—' }}</span></div>
+          <div class="info-field"><span class="info-label">CIN</span><span class="info-value">{{ infoEmployee?.cin ?? '—' }}</span></div>
+          <div class="info-field"><span class="info-label">CNSS</span><span class="info-value">{{ infoEmployee?.cnssNumber ?? '—' }}</span></div>
+          <div class="info-field"><span class="info-label">Matricule</span><span class="info-value">{{ infoEmployee?.matricule ?? '—' }}</span></div>
+          <div class="info-field"><span class="info-label">Genre</span><span class="info-value">{{ infoEmployee?.gender ?? '—' }}</span></div>
+          <div class="info-field"><span class="info-label">Naissance</span><span class="info-value">{{ infoEmployee?.birthDate ? (infoEmployee?.birthDate | date:'dd/MM/yyyy') : '—' }}</span></div>
+          <div class="info-field"><span class="info-label">Embauche</span><span class="info-value">{{ infoEmployee?.hireDate ? (infoEmployee?.hireDate | date:'dd/MM/yyyy') : '—' }}</span></div>
+        </div>
+      </div>
+      <div class="info-tab-content" *ngIf="infoTab === 'contact'">
+        <div class="info-grid">
+          <div class="info-field full-width"><span class="info-label">Téléphone</span><span class="info-value">{{ infoEmployee?.phone ?? '—' }}</span></div>
+          <div class="info-field full-width"><span class="info-label">Email</span><span class="info-value">{{ infoEmployee?.email ?? '—' }}</span></div>
+          <div class="info-field full-width"><span class="info-label">Adresse</span><span class="info-value">{{ infoEmployee?.address ?? '—' }}</span></div>
+          <div class="info-field full-width"><span class="info-label">Ville</span><span class="info-value">{{ infoEmployee?.city ?? '—' }}</span></div>
+        </div>
+      </div>
+      <div class="info-tab-content" *ngIf="infoTab === 'pro'">
+        <div class="info-grid">
+          <div class="info-field"><span class="info-label">Code</span><span class="info-value">{{ infoEmployee?.employeeCode ?? '—' }}</span></div>
+          <div class="info-field"><span class="info-label">Entreprise</span><span class="info-value">{{ companyName(infoEmployee?.companyId) }}</span></div>
+          <div class="info-field"><span class="info-label">Département</span><span class="info-value">{{ departmentName(infoEmployee?.departmentId) }}</span></div>
+          <div class="info-field"><span class="info-label">Poste</span><span class="info-value">{{ positionName(infoEmployee?.positionId) }}</span></div>
+        </div>
+      </div>
+      <div class="info-tab-content" *ngIf="infoTab === 'salaire'">
+        <div class="info-grid">
+          <div class="info-field"><span class="info-label">Salaire base</span><span class="info-value">{{ (infoEmployee?.baseSalary | number:'1.2-2') || '—' }} MAD</span></div>
+          <div class="info-field"><span class="info-label">Paiement</span><span class="info-value">{{ infoEmployee?.paymentMode ?? '—' }}</span></div>
+          <div class="info-field"><span class="info-label">Banque</span><span class="info-value">{{ infoEmployee?.bankName ?? '—' }}</span></div>
+          <div class="info-field full-width"><span class="info-label">N° Compte</span><span class="info-value">{{ infoEmployee?.bankAccountNumber ?? '—' }}</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="info-panel-footer">
+      <button class="btn btn-secondary" (click)="closeInfo()">Fermer</button>
+      <button class="btn btn-primary" (click)="openEditFromInfo()">Modifier</button>
+    </div>
+  </div>
+</div>
 
+<!-- MODAL CREATE / EDIT -->
+<div class="modal-overlay" *ngIf="showModal" (click)="close()">
+  <div class="modal-content-custom" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ editing ? 'Modifier' : 'Ajouter' }} – Employé</h3>
+      <button class="btn btn-icon btn-secondary" (click)="close()"><i class="bi bi-x-lg"></i></button>
+    </div>
     <div class="modal-body">
       <div class="modal-form-shell">
-        <div class="api-error" *ngIf="errors['api']">
-          <i class="bi bi-exclamation-triangle-fill"></i> {{ errors['api'] }}
+        <div class="api-error" *ngIf="errors['api']">{{ errors['api'] }}</div>
+
+        <div class="form-section-title">Entreprise & Organisation</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Entreprise *</label>
+            <ng-container *ngIf="auth.isSuperAdmin(); else readonlyCompany">
+              <app-searchable-select
+                [items]="companies"
+                displayField="name"
+                valueField="id"
+                [(ngModel)]="form.companyId"
+                (valueChange)="onCompanyChange()"
+                placeholder="— Sélectionner —">
+              </app-searchable-select>
+            </ng-container>
+            <ng-template #readonlyCompany>
+              <div class="readonly-field">{{ currentCompanyName }}</div>
+            </ng-template>
+          </div>
+          <div class="form-group">
+            <label>Département</label>
+            <app-searchable-select
+              [items]="filteredDepartments"
+              displayField="name"
+              valueField="id"
+              [(ngModel)]="form.departmentId"
+              (valueChange)="onDepartmentChange()"
+              placeholder="— Aucun —">
+            </app-searchable-select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Poste</label>
+            <app-searchable-select
+              [items]="filteredPositions"
+              displayField="name"
+              valueField="id"
+              [(ngModel)]="form.positionId"
+              placeholder="— Aucun —">
+            </app-searchable-select>
+          </div>
+          <div class="form-group">
+            <label>Code employé</label>
+            <input type="text" [(ngModel)]="form.employeeCode" placeholder="EMP-001" />
+          </div>
         </div>
 
-      <div class="form-section-title"><i class="bi bi-building"></i> Entreprise & Organisation</div>
-      <div class="form-row">
-        <div class="form-group" [class.has-error]="hasError('companyId')">
-          <label><i class="bi bi-building"></i> Entreprise <span class="required">*</span></label>
-          <ng-container *ngIf="auth.isSuperAdmin(); else readonlyCompany">
-            <select [(ngModel)]="form.companyId" (change)="onCompanyChange()">
-              <option value="">— Sélectionner —</option>
-              <option *ngFor="let c of companies" [value]="c.id">{{ c.name }}</option>
+        <div class="form-section-title">Identité</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Prénom *</label>
+            <input type="text" [(ngModel)]="form.firstName" />
+          </div>
+          <div class="form-group">
+            <label>Nom *</label>
+            <input type="text" [(ngModel)]="form.lastName" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>CIN</label>
+            <input type="text" [(ngModel)]="form.cin" />
+          </div>
+          <div class="form-group">
+            <label>N° CNSS</label>
+            <input type="text" [(ngModel)]="form.cnssNumber" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Matricule</label>
+            <input type="text" [(ngModel)]="form.matricule" />
+          </div>
+          <div class="form-group">
+            <label>Genre</label>
+            <select [(ngModel)]="form.gender">
+              <option value="">— Non spécifié —</option>
+              <option *ngFor="let g of genderOptions" [value]="g">{{ g }}</option>
             </select>
-          </ng-container>
-          <ng-template #readonlyCompany>
-            <div class="readonly-field">{{ currentCompanyName }}</div>
-          </ng-template>
-          <span class="field-error" *ngIf="hasError('companyId')">{{ errors['companyId'] }}</span>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Date de naissance</label>
+            <input type="date" [(ngModel)]="form.birthDate" />
+          </div>
+          <div class="form-group">
+            <label>Date d'embauche *</label>
+            <input type="date" [(ngModel)]="form.hireDate" />
+          </div>
         </div>
 
-        <div class="form-group">
-          <label><i class="bi bi-diagram-3"></i> Département</label>
-          <select [(ngModel)]="form.departmentId" (change)="onDepartmentChange()">
-            <option value="">— Aucun —</option>
-            <option *ngFor="let d of filteredDepartments" [value]="d.id">{{ d.name }}</option>
-          </select>
+        <div class="form-section-title">Contact</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Téléphone</label>
+            <input type="text" [(ngModel)]="form.phone" />
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" [(ngModel)]="form.email" />
+          </div>
         </div>
-      </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Adresse</label>
+            <input type="text" [(ngModel)]="form.address" />
+          </div>
+          <div class="form-group">
+            <label>Ville</label>
+            <input type="text" [(ngModel)]="form.city" />
+          </div>
+        </div>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label><i class="bi bi-briefcase"></i> Poste</label>
-          <select [(ngModel)]="form.positionId">
-            <option value="">— Aucun —</option>
-            <option *ngFor="let p of filteredPositions" [value]="p.id">{{ p.name }}</option>
-          </select>
+        <div class="form-section-title">Salaire & Paiement</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Salaire de base</label>
+            <input type="number" [(ngModel)]="form.baseSalary" />
+          </div>
+          <div class="form-group">
+            <label>Mode de paiement</label>
+            <input type="text" [(ngModel)]="form.paymentMode" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Banque</label>
+            <input type="text" [(ngModel)]="form.bankName" />
+          </div>
+          <div class="form-group">
+            <label>N° Compte bancaire</label>
+            <input type="text" [(ngModel)]="form.bankAccountNumber" />
+          </div>
         </div>
         <div class="form-group">
-          <label><i class="bi bi-hash"></i> Code employé</label>
-          <input type="text" [(ngModel)]="form.employeeCode" placeholder="EMP-001" />
-        </div>
-      </div>
-
-      <div class="form-section-title"><i class="bi bi-person-vcard"></i> Identité</div>
-      <div class="form-row">
-        <div class="form-group" [class.has-error]="hasError('firstName')">
-          <label><i class="bi bi-person"></i> Prénom <span class="required">*</span></label>
-          <input type="text" [(ngModel)]="form.firstName" />
-          <span class="field-error" *ngIf="hasError('firstName')">{{ errors['firstName'] }}</span>
-        </div>
-        <div class="form-group" [class.has-error]="hasError('lastName')">
-          <label><i class="bi bi-person"></i> Nom <span class="required">*</span></label>
-          <input type="text" [(ngModel)]="form.lastName" />
-          <span class="field-error" *ngIf="hasError('lastName')">{{ errors['lastName'] }}</span>
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label><i class="bi bi-credit-card-2-front"></i> CIN</label>
-          <input type="text" [(ngModel)]="form.cin" placeholder="AB123456" />
-        </div>
-        <div class="form-group">
-          <label><i class="bi bi-shield-check"></i> N° CNSS</label>
-          <input type="text" [(ngModel)]="form.cnssNumber" />
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label><i class="bi bi-tag"></i> Matricule</label>
-          <input type="text" [(ngModel)]="form.matricule" />
-        </div>
-        <div class="form-group">
-          <label><i class="bi bi-gender-ambiguous"></i> Genre</label>
-          <select [(ngModel)]="form.gender">
-            <option value="">— Non spécifié —</option>
-            <option *ngFor="let g of genderOptions" [value]="g">{{ g }}</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label><i class="bi bi-calendar-heart"></i> Date de naissance</label>
-          <input type="date" [(ngModel)]="form.birthDate" />
-        </div>
-        <div class="form-group" [class.has-error]="hasError('hireDate')">
-          <label><i class="bi bi-calendar-check"></i> Date d'embauche <span class="required">*</span></label>
-          <input type="date" [(ngModel)]="form.hireDate" />
-          <span class="field-error" *ngIf="hasError('hireDate')">{{ errors['hireDate'] }}</span>
-        </div>
-      </div>
-
-      <div class="form-section-title"><i class="bi bi-telephone"></i> Contact</div>
-      <div class="form-row">
-        <div class="form-group">
-          <label><i class="bi bi-telephone"></i> Téléphone</label>
-          <input type="text" [(ngModel)]="form.phone" placeholder="+212 6XX XXX XXX" />
-        </div>
-        <div class="form-group">
-          <label><i class="bi bi-envelope"></i> Email</label>
-          <input type="email" [(ngModel)]="form.email" />
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label><i class="bi bi-geo-alt"></i> Adresse</label>
-          <input type="text" [(ngModel)]="form.address" />
-        </div>
-        <div class="form-group">
-          <label><i class="bi bi-buildings"></i> Ville</label>
-          <input type="text" [(ngModel)]="form.city" />
-        </div>
-      </div>
-
-      <div class="form-section-title"><i class="bi bi-cash-stack"></i> Salaire & Paiement</div>
-      <div class="form-row">
-        <div class="form-group">
-          <label><i class="bi bi-currency-dollar"></i> Salaire de base</label>
-          <input type="number" [(ngModel)]="form.baseSalary" placeholder="0.00" min="0" />
-        </div>
-        <div class="form-group">
-          <label><i class="bi bi-credit-card"></i> Mode de paiement</label>
-          <input type="text" [(ngModel)]="form.paymentMode" placeholder="Virement, Chèque..." />
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label><i class="bi bi-bank"></i> Banque</label>
-          <input type="text" [(ngModel)]="form.bankName" />
-        </div>
-        <div class="form-group">
-          <label><i class="bi bi-wallet2"></i> N° Compte bancaire</label>
-          <input type="text" [(ngModel)]="form.bankAccountNumber" />
-        </div>
-      </div>
-
-        <div class="form-group">
-          <label><i class="bi bi-toggle-on"></i> Statut</label>
+          <label>Statut</label>
           <select [(ngModel)]="form.status">
             <option *ngFor="let s of statusOptions" [value]="s">{{ s }}</option>
           </select>
         </div>
       </div>
     </div>
-
     <div class="modal-footer">
-      <button class="btn btn-secondary" (click)="close()">
-        Annuler
-      </button>
-      <button class="btn btn-primary" (click)="save()">
-        {{ editing ? 'Enregistrer' : 'Créer' }}
-      </button>
+      <button class="btn btn-secondary" (click)="close()">Annuler</button>
+      <button class="btn btn-primary" (click)="save()">{{ editing ? 'Enregistrer' : 'Créer' }}</button>
     </div>
   </div>
 </div>
